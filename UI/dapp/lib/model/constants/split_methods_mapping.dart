@@ -1,0 +1,1 @@
+List<String> splitMethods = ['Equally'];
