@@ -1,51 +1,62 @@
 import 'package:dapp/model/group_profile_model.dart';
+import 'package:dapp/providers/group_profile_state_provider.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
 import 'package:dapp/widgets/group_list_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MyGroupView extends StatefulWidget {
+class MyGroupView extends ConsumerStatefulWidget {
   const MyGroupView({super.key});
 
   @override
-  State<MyGroupView> createState() => _MyGroupViewState();
+  ConsumerState<MyGroupView> createState() => _MyGroupViewState();
 }
 
-class _MyGroupViewState extends State<MyGroupView> {
-  final List<GroupProfile> groupProfiles = [
+class _MyGroupViewState extends ConsumerState<MyGroupView> {
+  /* final List<GroupProfile> groupProfiles = [
     GroupProfile(
         groupID: 1,
         groupName: 'Dog Lovers',
         deposit: '100.00',
-        groupImagePath: 'assets/dog.jpg',
-        latestTransactionDate: '30 May 2024',
+        groupImagePath: 'assets/default_avatar.jpg',
         membersCount: '3'),
     GroupProfile(
         groupID: 2,
         groupName: 'Cat Lovers',
         deposit: '310.12',
         groupImagePath: 'assets/cat.jpg',
-        latestTransactionDate: '10 June 2024',
         membersCount: '2'),
     GroupProfile(
         groupID: 3,
         groupName: 'Bird Lovers',
         deposit: '3154.11',
         groupImagePath: 'assets/bird.jpg',
-        latestTransactionDate: '29 April 2024',
         membersCount: '5'),
     GroupProfile(
         groupID: 4,
         groupName: 'Flower Lovers',
         deposit: '16804.37',
         groupImagePath: 'assets/flower.jpg',
-        latestTransactionDate: '15 June 2024',
         membersCount: '2')
-  ];
+  ]; */
+
+  @override
+  void initState() {
+    super.initState();
+    final groupProfileNotifier = ref.read(groupProfileStateProvider.notifier);
+    if (groupProfileNotifier.isEmpty) {
+      groupProfileNotifier.loadGroupProfiles();
+    }
+    //TODO: Implement blockchain listener to listen for changes; listenToBlockchainEvents();
+  }
 
   @override
   Widget build(BuildContext context) {
     final deviceSize = MediaQuery.of(context).size;
+    Map<String, GroupProfile> groupsMapping =
+        ref.watch(groupProfileStateProvider);
+    List<GroupProfile> groupProfiles = groupsMapping.values.toList();
 
     return Scaffold(
       appBar: AppBar(

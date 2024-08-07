@@ -24,6 +24,7 @@ Widget groupListCard(GroupProfile groupProfile, BuildContext context) {
             CircleAvatar(
               radius: 35,
               backgroundImage: AssetImage(groupProfile.groupImagePath),
+              backgroundColor: Colors.white,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -39,8 +40,8 @@ Widget groupListCard(GroupProfile groupProfile, BuildContext context) {
                   Text('Balance: ${groupProfile.deposit}',
                       style:
                           const TextStyle(color: Colors.teal, fontSize: 18.0)),
-                  Text(
-                      'Latest transaction: ${groupProfile.latestTransactionDate}'),
+                  /* Text(
+                      'Latest transaction: ${groupProfile.latestTransactionDate}'), */
                 ],
               ),
             ),
