@@ -63,13 +63,13 @@ class AppNavigation {
                       ),
                     ),
                     GoRoute(
-                      path: 'groupProfile/:groupID',
+                      path: 'groupProfile/:groupName',
                       name: 'groupProfile',
                       pageBuilder: (context, state) =>
                           CustomTransitionPage<void>(
                         key: state.pageKey,
                         child: GroupProfileView(
-                            groupID: state.pathParameters['groupID']),
+                            groupName: state.pathParameters['groupName']),
                         transitionsBuilder: (context, animation,
                                 secondaryAnimation, child) =>
                             FadeTransition(opacity: animation, child: child),

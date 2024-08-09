@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:http/http.dart';
+import 'package:web3dart/crypto.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:dapp/services/ethereum_abi_loader.dart';
 import 'package:dapp/enum/escrow_factory_functions.dart';
@@ -6,8 +10,8 @@ import 'package:dapp/enum/escrow_factory_functions.dart';
 class EthereumService {
   static final EthereumService _instance = EthereumService._internal();
   static const int _chainID = 1337;
-  late String rpcUrl;
-  late String privateKey;
+  late String _rpcUrl;
+  late String _privateKey;
   late String factoryContractAddress;
   late DeployedContract escrowContract;
   late Web3Client _client;
@@ -19,16 +23,16 @@ class EthereumService {
       {required String rpcUrl,
       required String privateKey,
       required String factoryContractAddress}) {
-    _instance.rpcUrl = rpcUrl;
-    _instance.privateKey = privateKey;
+    _instance._rpcUrl = rpcUrl;
+    _instance._privateKey = privateKey;
     _instance.factoryContractAddress = factoryContractAddress;
     _instance._initialize();
     return _instance;
   }
 
   void _initialize() async {
-    _client = Web3Client(rpcUrl, Client());
-    _credentials = EthPrivateKey.fromHex(privateKey);
+    _client = Web3Client(_rpcUrl, Client());
+    _credentials = EthPrivateKey.fromHex(_privateKey);
 
     DeployedContract factoryContract = await _instance.loadFactoryContract();
     final response = await _instance.query(factoryContract,
@@ -87,9 +91,9 @@ class EthereumService {
       }
     }
 
-    print('Txn Receipt: $receipt');
+    /* print('Txn Receipt: $receipt');
     print('Txn Receipt contract addr: ${receipt.contractAddress}');
-    print('Txn Receipt logs: ${receipt.logs}');
+    print('Txn Receipt logs: ${receipt.logs}'); */
 
     return result;
   }
@@ -110,8 +114,8 @@ class EthereumService {
 
   void listenToGroupCreatedEvents(Function(String, EthereumAddress) handler) {
     _listenToEvent('GroupCreated', (List<dynamic> decoded) {
-      final groupName = decoded[0] as String;
-      final owner = decoded[1] as EthereumAddress;
+      final groupName = decoded[0].toString();
+      final owner = decoded[1];
       handler(groupName, owner);
     });
   }

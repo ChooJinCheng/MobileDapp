@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class GroupProfileView extends StatefulWidget {
-  final String? groupID;
-  const GroupProfileView({super.key, this.groupID});
+  final String? groupName;
+  const GroupProfileView({super.key, this.groupName});
 
   @override
   State<GroupProfileView> createState() => _GroupProfileViewState();
@@ -85,7 +85,7 @@ class _GroupProfileViewState extends State<GroupProfileView> {
         titleSpacing: 0.0,
         backgroundColor: Colors.white,
         title: Text(
-          'Group ${widget.groupID}',
+          '${widget.groupName}',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),

@@ -14,7 +14,7 @@ Widget groupListCard(GroupProfile groupProfile, BuildContext context) {
       ),
       onTap: () {
         context.goNamed('groupProfile',
-            pathParameters: {'groupID': groupProfile.groupID.toString()});
+            pathParameters: {'groupName': groupProfile.groupName});
       },
       child: Padding(
         padding: const EdgeInsets.all(12.0),

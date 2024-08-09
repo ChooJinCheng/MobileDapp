@@ -48,7 +48,6 @@ class _MyGroupViewState extends ConsumerState<MyGroupView> {
     if (groupProfileNotifier.isEmpty) {
       groupProfileNotifier.loadGroupProfiles();
     }
-    //TODO: Implement blockchain listener to listen for changes; listenToBlockchainEvents();
   }
 
   @override

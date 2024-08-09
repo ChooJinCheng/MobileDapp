@@ -17,20 +17,20 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
 
     final response = await ethereumService.query(escrowContract,
         EscrowFunctions.getAllGroupNames.functionName, [], false);
-    print('Response of getAllGroupNames Funct: $response');
     List<dynamic> groupNames = response[0];
-    int groupCount = 1;
+
     for (var groupName in groupNames) {
       final group =
           await fetchGroupProfileFromBlockChain(escrowContract, groupName);
+      String groupSize = group[0].toString();
+      String groupDeposit = group[1].toString();
+
       groups.add(GroupProfile(
-        groupID: groupCount,
         groupName: groupName,
-        deposit: group[1].toString(),
+        deposit: groupDeposit,
         groupImagePath: 'assets/default_avatar.jpg',
-        membersCount: group[0].toString(),
+        membersCount: groupSize,
       ));
-      groupCount++;
     }
     return groups;
   }
@@ -62,5 +62,18 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
     ethereumService.listenToGroupCreatedEvents(_handleGroupCreated);
   }
 
-  void _handleGroupCreated(String groupName, EthereumAddress owner) {}
+  void _handleGroupCreated(String groupName, EthereumAddress owner) async {
+    if (owner == ethereumService.userAddress) {
+      final group = await fetchGroupProfileFromBlockChain(
+          ethereumService.escrowContract, groupName);
+      String groupSize = group[0].toString();
+      String groupDeposit = group[1].toString();
+
+      updateGroup(GroupProfile(
+          groupName: groupName,
+          deposit: groupDeposit,
+          groupImagePath: 'assets/default_avatar.jpg',
+          membersCount: groupSize));
+    }
+  }
 }
