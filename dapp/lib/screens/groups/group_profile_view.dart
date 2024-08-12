@@ -1,6 +1,6 @@
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/model/user_transaction_model.dart';
-import 'package:dapp/providers/group_profile_state_provider.dart';
+import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
 import 'package:dapp/widgets/group_profile_card.dart';
 import 'package:dapp/widgets/transaction_list_card.dart';

@@ -1,4 +1,4 @@
-import 'package:dapp/providers/group_service_provider.dart';
+import 'package:dapp/global_state/providers/group_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:choice/choice.dart';

@@ -1,4 +1,4 @@
-import 'package:dapp/providers/ethereum_service_provider.dart';
+import 'package:dapp/global_state/providers/ethereum_service_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 

@@ -1,5 +1,5 @@
 import 'package:dapp/model/group_profile_model.dart';
-import 'package:dapp/providers/group_profile_state_provider.dart';
+import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
 import 'package:dapp/widgets/group_list_card.dart';
 import 'package:flutter/material.dart';
