@@ -1,21 +1,24 @@
+import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/model/user_transaction_model.dart';
+import 'package:dapp/providers/group_profile_state_provider.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
 import 'package:dapp/widgets/group_profile_card.dart';
 import 'package:dapp/widgets/transaction_list_card.dart';
 import 'package:dapp/widgets/transaction_slidable.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class GroupProfileView extends StatefulWidget {
-  final String? groupName;
-  const GroupProfileView({super.key, this.groupName});
+class GroupProfileView extends ConsumerStatefulWidget {
+  final String groupName;
+  const GroupProfileView({super.key, required this.groupName});
 
   @override
-  State<GroupProfileView> createState() => _GroupProfileViewState();
+  ConsumerState<GroupProfileView> createState() => _GroupProfileViewState();
 }
 
-class _GroupProfileViewState extends State<GroupProfileView> {
+class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
   //TODO: Filter will be dynamically populated with existing dates
   final List<String> filterList = <String>[
     'All',
@@ -80,12 +83,15 @@ class _GroupProfileViewState extends State<GroupProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    GroupProfile groupProfile =
+        ref.watch(groupProfileStateProvider)[widget.groupName]!;
+
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0.0,
         backgroundColor: Colors.white,
         title: Text(
-          '${widget.groupName}',
+          groupProfile.groupName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -111,7 +117,8 @@ class _GroupProfileViewState extends State<GroupProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                groupProfileCard(),
+                groupProfileCard(groupProfile,
+                    '3'), //TODO: Insert real transaction pending count
                 const SizedBox(
                   height: 16.0,
                 ),

@@ -1,5 +1,4 @@
-import 'package:dapp/enum/escrow_functions.dart';
-import 'package:dapp/providers/ethereum_service_provider.dart';
+import 'package:dapp/providers/group_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:choice/choice.dart';
@@ -15,9 +14,9 @@ class AddGroupView extends ConsumerStatefulWidget {
 
 class _AddGroupViewState extends ConsumerState<AddGroupView> {
   List<String> memberAddresses = [
-    '0xd250dbA9e188f34B50864207ef15eda4AdA0Df49',
-    '0xFAA1B225c92D85dc90170494310Ef167ef6a90b5',
-    '0xCFB91764b7676213bC01a997c3347Bbe076df738',
+    '0x785D13806600B9c60FfD832Dbe553678893283D9',
+    '0xB83e465268147456070a302dBC1d06080011876b',
+    '0x8a4c7a15B52A077d1394D868588b7F88Fc93C853',
   ];
   List<String> selectedAddresses = [];
 
@@ -36,7 +35,7 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
 
   @override
   Widget build(BuildContext context) {
-    final ethereumService = ref.watch(ethereumServiceProvider);
+    final groupService = ref.watch(groupServiceProvider);
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0.0,
@@ -48,7 +47,7 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
         ),
         actions: [
           IconButton(
-            onPressed: () async {
+            onPressed: () {
               if (formKey.currentState!.validate()) {
                 List<dynamic> args = [];
                 String groupName = groupNameFieldController.text;
@@ -57,17 +56,17 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
                     .toList();
                 args.add(groupName);
                 args.add(selectedEthAddresses);
-                /* DeployedContract escrowContract =
-                    ethereumService.escrowContract;
-                await ethereumService.callFunction(
-                  escrowContract,
-                  EscrowFunctions.createGroup.functionName,
-                  args,
-                ); */
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Group Added Successfully')),
-                );
-                context.pop();
+                try {
+                  groupService.addNewGroup(args);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Group Added Successfully')),
+                  );
+                  context.pop();
+                } catch (e) {
+                  print('Error: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Error encountered. Please try again')));
+                }
               }
             },
             icon: const Icon(Icons.group_add_sharp),

@@ -1,51 +1,18 @@
-import 'package:dapp/enum/escrow_functions.dart';
 import 'package:dapp/model/group_profile_model.dart';
-import 'package:dapp/services/ethereum_service.dart';
+import 'package:dapp/services/group_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web3dart/web3dart.dart';
 
 class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
-  final EthereumService ethereumService;
+  final GroupService groupService;
 
-  GroupProfileNotifier(this.ethereumService) : super({}) {
+  GroupProfileNotifier(this.groupService) : super({}) {
     _listenToGroupEvents();
   }
 
-  Future<List<GroupProfile>> fetchGroupProfilesFromBlockchain() async {
-    DeployedContract escrowContract = ethereumService.escrowContract;
-    List<GroupProfile> groups = [];
-
-    final response = await ethereumService.query(escrowContract,
-        EscrowFunctions.getAllGroupNames.functionName, [], false);
-    List<dynamic> groupNames = response[0];
-
-    for (var groupName in groupNames) {
-      final group =
-          await fetchGroupProfileFromBlockChain(escrowContract, groupName);
-      String groupSize = group[0].toString();
-      String groupDeposit = group[1].toString();
-
-      groups.add(GroupProfile(
-        groupName: groupName,
-        deposit: groupDeposit,
-        groupImagePath: 'assets/default_avatar.jpg',
-        membersCount: groupSize,
-      ));
-    }
-    return groups;
-  }
-
-  Future<List<dynamic>> fetchGroupProfileFromBlockChain(
-      DeployedContract escrowContract, String groupName) async {
-    return ethereumService.query(
-        escrowContract,
-        EscrowFunctions.getGroupSizeAndMemberDeposit.functionName,
-        [groupName],
-        true);
-  }
-
   Future<void> loadGroupProfiles() async {
-    List<GroupProfile> groups = await fetchGroupProfilesFromBlockchain();
+    List<GroupProfile> groups =
+        await groupService.fetchGroupProfilesFromBlockchain();
     state = {for (var group in groups) group.groupName: group};
   }
 
@@ -59,13 +26,13 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
   bool get isEmpty => state.isEmpty;
 
   _listenToGroupEvents() {
-    ethereumService.listenToGroupCreatedEvents(_handleGroupCreated);
+    groupService.listenToGroupCreatedEvents(_handleGroupCreated);
   }
 
   void _handleGroupCreated(String groupName, EthereumAddress owner) async {
-    if (owner == ethereumService.userAddress) {
-      final group = await fetchGroupProfileFromBlockChain(
-          ethereumService.escrowContract, groupName);
+    if (owner == groupService.userAddress) {
+      final group =
+          await groupService.fetchGroupProfileFromBlockChain(groupName);
       String groupSize = group[0].toString();
       String groupDeposit = group[1].toString();
 
