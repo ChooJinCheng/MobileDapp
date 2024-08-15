@@ -5,6 +5,11 @@
                 "internalType": "address",
                 "name": "_owner",
                 "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_factory",
+                "type": "address"
             }
         ],
         "stateMutability": "nonpayable",
@@ -72,13 +77,44 @@
                 "type": "string"
             },
             {
+                "indexed": false,
+                "internalType": "address[]",
+                "name": "members",
+                "type": "address[]"
+            },
+            {
                 "indexed": true,
                 "internalType": "address",
-                "name": "owner",
+                "name": "contractAddress",
                 "type": "address"
             }
         ],
         "name": "GroupCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "groupName",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "address[]",
+                "name": "members",
+                "type": "address[]"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "contractAddress",
+                "type": "address"
+            }
+        ],
+        "name": "GroupDisbanded",
         "type": "event"
     },
     {
@@ -269,8 +305,14 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "getAllGroupNames",
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "member",
+                "type": "address"
+            }
+        ],
+        "name": "getAllMemberGroupNames",
         "outputs": [
             {
                 "internalType": "string[]",

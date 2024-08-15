@@ -5,6 +5,6 @@ final ethereumServiceProvider = Provider<EthereumService>((ref) {
   return EthereumService(
       rpcUrl: 'http://10.0.2.2:7545',
       privateKey:
-          '0xab9ff16b392733d7051b6ad2a684f4acb12d27228f922c305ab7ef84fa6c57a8',
-      factoryContractAddress: '0xa41712F549cD6AEeeEb52b5Cc1533d19111b1afe');
+          '0x243881ef9e0b2105616bf1b628bfa6506345e784761e9629bb82667288bafbb7',
+      factoryContractAddress: '0x0D5102c112ac7f26558d7ACBf3Bb2599B12e28e0');
 });

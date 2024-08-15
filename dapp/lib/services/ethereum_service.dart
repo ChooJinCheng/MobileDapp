@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:dapp/enum/escrow_events.dart';
 import 'package:http/http.dart';
+import 'package:web3dart/json_rpc.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:dapp/services/ethereum_abi_loader.dart';
 import 'package:dapp/enum/escrow_factory_functions.dart';
@@ -10,6 +14,7 @@ class EthereumService {
   late String _privateKey;
   late String factoryContractAddress;
   late DeployedContract escrowContract;
+  late DeployedContract escrowFactoryContract;
   late Web3Client _client;
   late EthPrivateKey _credentials;
 
@@ -30,26 +35,47 @@ class EthereumService {
     _client = Web3Client(_rpcUrl, Client());
     _credentials = EthPrivateKey.fromHex(_privateKey);
 
-    DeployedContract factoryContract = await _instance.loadFactoryContract();
-    final response = await _instance.query(factoryContract,
+    escrowFactoryContract = await _instance.loadFactoryContract();
+    final response = await _instance.query(escrowFactoryContract,
         EscrowFactoryFunctions.getEscrow.functionName, [], true);
     String address = response[0].toString();
+
     if (address != '0x0000000000000000000000000000000000000000') {
-      escrowContract = await _instance.loadContract(
-          'lib/services/ethereum_contract_json/escrow_abi.json', address);
-      print('Deployed Escrow Contract At: $address');
+      escrowContract = await _instance.loadEscrowContract(address);
+      print('Escrow Contract is already deployed at: $address');
     } else {
-      print('No Escrow Contract Deployed');
+      await deployEscrowContract(escrowFactoryContract);
+      final address = await query(escrowFactoryContract,
+          EscrowFactoryFunctions.getEscrow.functionName, [], true);
+      escrowContract =
+          await _instance.loadEscrowContract(address[0].toString());
+      print('Newly deployed escrow at: $address');
     }
   }
 
   EthereumAddress get userAddress => _credentials.address;
+  EthereumAddress get escrowAddress => escrowContract.address;
+
+  deployEscrowContract(DeployedContract factoryContract) async {
+    return await callFunction(factoryContractAddress,
+        EscrowFactoryFunctions.deployEscrow.functionName, []);
+  }
 
   Future<DeployedContract> loadContract(
       String abiPath, String contractAddress) async {
     final abiString = await loadAbi(abiPath);
     final contract = DeployedContract(
       ContractAbi.fromJson(abiString, 'MyContract'),
+      EthereumAddress.fromHex(contractAddress),
+    );
+    return contract;
+  }
+
+  Future<DeployedContract> loadEscrowContract(String contractAddress) async {
+    final abiString =
+        await loadAbi('lib/services/ethereum_contract_json/escrow_abi.json');
+    final contract = DeployedContract(
+      ContractAbi.fromJson(abiString, 'EscrowContract'),
       EthereumAddress.fromHex(contractAddress),
     );
     return contract;
@@ -65,38 +91,48 @@ class EthereumService {
     return contract;
   }
 
-  callFunction(DeployedContract contract, String functionName,
-      List<dynamic> args) async {
-    final function = contract.function(functionName);
-    final result = await _client.sendTransaction(
-      _credentials,
-      Transaction.callContract(
-        contract: contract,
-        function: function,
-        parameters: args,
-        maxGas: 6721975,
-      ),
-      chainId: _chainID,
-    );
+  callFunction(
+      String contractAddress, String functionName, List<dynamic> args) async {
+    DeployedContract deployedContract =
+        await loadEscrowContract(contractAddress);
+    final function = deployedContract.function(functionName);
+    try {
+      final result = await _client.sendTransaction(
+        _credentials,
+        Transaction.callContract(
+          contract: deployedContract,
+          function: function,
+          parameters: args,
+          maxGas: 6721975,
+        ),
+        chainId: _chainID,
+      );
 
-    TransactionReceipt? receipt;
-    while (receipt == null) {
-      receipt = await _client.getTransactionReceipt(result);
-      if (receipt == null) {
-        await Future.delayed(Duration(seconds: 1));
+      TransactionReceipt? receipt;
+      while (receipt == null) {
+        receipt = await _client.getTransactionReceipt(result);
+        if (receipt == null) {
+          await Future.delayed(Duration(seconds: 1));
+        }
       }
-    }
 
-    /* print('Txn Receipt: $receipt');
+      /* print('Txn Receipt: $receipt');
     print('Txn Receipt contract addr: ${receipt.contractAddress}');
     print('Txn Receipt logs: ${receipt.logs}'); */
 
-    return result;
+      return result;
+    } catch (e) {
+      //TODO: Return the error message back to screen
+      if (e is RPCError) {
+        String errorMessage = e.message;
+        print(errorMessage);
+      }
+    }
   }
 
   Future<List<dynamic>> query(DeployedContract contract, String functionName,
-      List<dynamic> args, bool sendAddress) async {
-    if (sendAddress) {
+      List<dynamic> args, bool sendUserAddress) async {
+    if (sendUserAddress) {
       args.add(_credentials.address);
     }
     final ethFunction = contract.function(functionName);
@@ -108,18 +144,70 @@ class EthereumService {
     return result;
   }
 
-  void listenToGroupCreatedEvents(Function(String, EthereumAddress) handler) {
-    _listenToEvent('GroupCreated', (List<dynamic> decoded) {
-      final groupName = decoded[0].toString();
-      final owner = decoded[1];
-      handler(groupName, owner);
+  Future<StreamSubscription<FilterEvent>> listenToGroupCreatedEvents(
+      String contractAddress,
+      Function(String, List<EthereumAddress>, String) handler) async {
+    final DeployedContract deployedContract =
+        await loadEscrowContract(contractAddress);
+    return _listenToEvent(EscrowEvents.groupCreated.eventName, deployedContract,
+        (List<dynamic> decoded) {
+      final String groupName = decoded[0].toString();
+      final List<EthereumAddress> members = (decoded[1] as List<dynamic>)
+          .map((address) => address as EthereumAddress)
+          .toList();
+      final String memberContractAddress = decoded[2].toString();
+      handler(groupName, members, memberContractAddress);
     });
   }
 
-  void _listenToEvent(String eventName, Function(List<dynamic>) decoder) {
-    final event = escrowContract.event(eventName);
-    _client
-        .events(FilterOptions.events(contract: escrowContract, event: event))
+  Future<StreamSubscription<FilterEvent>> listenToGroupDisbandedEvents(
+      String contractAddress,
+      Function(String, List<EthereumAddress>, String) handler) async {
+    final DeployedContract deployedContract =
+        await loadEscrowContract(contractAddress);
+    return _listenToEvent(
+        EscrowEvents.groupDisbanded.eventName, deployedContract,
+        (List<dynamic> decoded) {
+      final String groupName = decoded[0].toString();
+      final List<EthereumAddress> members = (decoded[1] as List<dynamic>)
+          .map((address) => address as EthereumAddress)
+          .toList();
+      final String memberContractAddress = decoded[2].toString();
+      handler(groupName, members, memberContractAddress);
+    });
+  }
+
+  StreamSubscription<FilterEvent> listenToEscrowRegisteredEvents(
+      Function(String, EthereumAddress, EthereumAddress) handler) {
+    return _listenToEvent(
+        EscrowEvents.escrowRegistered.eventName, escrowFactoryContract,
+        (List<dynamic> decoded) {
+      final String groupName = decoded[0].toString();
+      final EthereumAddress memberContractAddress =
+          decoded[1] as EthereumAddress;
+      final EthereumAddress memberAddress = decoded[2] as EthereumAddress;
+      handler(groupName, memberContractAddress, memberAddress);
+    });
+  }
+
+  StreamSubscription<FilterEvent> listenToEscrowDeregisteredEvents(
+      Function(String, EthereumAddress, EthereumAddress) handler) {
+    return _listenToEvent(
+        EscrowEvents.escrowDeregistered.eventName, escrowFactoryContract,
+        (List<dynamic> decoded) {
+      final String groupName = decoded[0].toString();
+      final EthereumAddress memberContractAddress =
+          decoded[1] as EthereumAddress;
+      final EthereumAddress memberAddress = decoded[2] as EthereumAddress;
+      handler(groupName, memberContractAddress, memberAddress);
+    });
+  }
+
+  StreamSubscription<FilterEvent> _listenToEvent(String eventName,
+      DeployedContract deployedContract, Function(List<dynamic>) decoder) {
+    final event = deployedContract.event(eventName);
+    return _client
+        .events(FilterOptions.events(contract: deployedContract, event: event))
         .listen((filterEvent) {
       final decoded =
           event.decodeResults(filterEvent.topics!, filterEvent.data!);

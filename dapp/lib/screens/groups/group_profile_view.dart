@@ -11,8 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class GroupProfileView extends ConsumerStatefulWidget {
-  final String groupName;
-  const GroupProfileView({super.key, required this.groupName});
+  final String groupID;
+  const GroupProfileView({super.key, required this.groupID});
 
   @override
   ConsumerState<GroupProfileView> createState() => _GroupProfileViewState();
@@ -84,7 +84,7 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
   @override
   Widget build(BuildContext context) {
     GroupProfile groupProfile =
-        ref.watch(groupProfileStateProvider)[widget.groupName]!;
+        ref.watch(groupProfileStateProvider)[widget.groupID]!;
 
     return Scaffold(
       appBar: AppBar(
@@ -117,8 +117,10 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                groupProfileCard(groupProfile,
-                    '3'), //TODO: Insert real transaction pending count
+                groupProfileCard(
+                    groupProfile,
+                    groupProfile
+                        .contractAddress), //TODO: Insert real transaction pending count
                 const SizedBox(
                   height: 16.0,
                 ),

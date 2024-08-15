@@ -100,9 +100,9 @@ class _MyGroupViewState extends ConsumerState<MyGroupView> {
             if (groupProfiles.isEmpty)
               emptyMessageCard('You are not in any groups')
             else
-              ...groupProfiles
-                  .map((groupProfile) => groupListCard(groupProfile, context)),
-            const SizedBox(height: 50.0),
+              ...groupProfiles.map(
+                  (groupProfile) => GroupListCard(groupProfile: groupProfile)),
+            const SizedBox(height: 130.0),
           ],
         ),
       ),

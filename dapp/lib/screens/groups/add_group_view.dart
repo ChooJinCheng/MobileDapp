@@ -14,9 +14,9 @@ class AddGroupView extends ConsumerStatefulWidget {
 
 class _AddGroupViewState extends ConsumerState<AddGroupView> {
   List<String> memberAddresses = [
-    '0x785D13806600B9c60FfD832Dbe553678893283D9',
-    '0xB83e465268147456070a302dBC1d06080011876b',
-    '0x8a4c7a15B52A077d1394D868588b7F88Fc93C853',
+    '0x9DfaA7fEcE71a8141186712bB27FEF47C2B02132',
+    '0xC3700793F250658D807bcdF9338ACF609f6153eA',
+    '0x09f15c0739Ec4F7343b50131Be5A8aDA09A30fA8',
   ];
   List<String> selectedAddresses = [];
 
@@ -51,11 +51,11 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
               if (formKey.currentState!.validate()) {
                 List<dynamic> args = [];
                 String groupName = groupNameFieldController.text;
-                List<EthereumAddress> selectedEthAddresses = selectedAddresses
+                List<EthereumAddress> selectedMembers = selectedAddresses
                     .map((address) => EthereumAddress.fromHex(address))
                     .toList();
                 args.add(groupName);
-                args.add(selectedEthAddresses);
+                args.add(selectedMembers);
                 try {
                   groupService.addNewGroup(args);
                   ScaffoldMessenger.of(context).showSnackBar(

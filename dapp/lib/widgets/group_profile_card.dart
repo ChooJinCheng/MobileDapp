@@ -1,7 +1,9 @@
+import 'package:dapp/model/group_profile_model.dart';
 import 'package:flutter/material.dart';
 import 'package:dapp/widgets/build_elevated_button.dart';
 
-Widget groupProfileCard() {
+Widget groupProfileCard(
+    GroupProfile groupProfile, String pendingTransactionCount) {
   return Container(
     padding: const EdgeInsets.all(6),
     decoration: BoxDecoration(
@@ -11,25 +13,26 @@ Widget groupProfileCard() {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const CircleAvatar(
+        CircleAvatar(
           radius: 35,
-          backgroundColor: Colors.black,
+          backgroundImage: AssetImage(groupProfile.groupImagePath),
+          backgroundColor: Colors.white,
         ),
-        const Text(
-          'Balance: \$43.26',
-          style: TextStyle(
+        Text(
+          'Balance: \$${groupProfile.deposit}',
+          style: const TextStyle(
               fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        const Text(
-          'Pending Transactions: 2',
-          style: TextStyle(
+        Text(
+          'Pending Transactions: $pendingTransactionCount',
+          style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: Color.fromRGBO(124, 124, 124, 1.0)),
         ),
-        const Text(
-          '3 Members',
-          style: TextStyle(
+        Text(
+          '${groupProfile.membersCount} Members',
+          style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: Color.fromRGBO(124, 124, 124, 1.0)),

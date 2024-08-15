@@ -17,22 +17,30 @@ class MyPortfolioView extends StatefulWidget {
 class _MyPortfolioViewState extends State<MyPortfolioView> {
   final List<GroupProfile> groupProfiles = [
     GroupProfile(
+        groupID: 'test1',
         groupName: 'Dog Lovers',
+        contractAddress: 'test1',
         deposit: '100.00',
         groupImagePath: 'assets/dog.jpg',
         membersCount: '3'),
     GroupProfile(
+        groupID: 'test2',
         groupName: 'Cat Lovers',
+        contractAddress: 'test2',
         deposit: '310.12',
         groupImagePath: 'assets/cat.jpg',
         membersCount: '2'),
     GroupProfile(
+        groupID: 'test3',
         groupName: 'Bird Loverssssssssssssssssssss',
+        contractAddress: 'test3',
         deposit: '3154.11',
         groupImagePath: 'assets/bird.jpg',
         membersCount: '5'),
     GroupProfile(
+        groupID: 'test4',
         groupName: 'Flower Lovers',
+        contractAddress: 'test4',
         deposit: '16804.37',
         groupImagePath: 'assets/flower.jpg',
         membersCount: '2')

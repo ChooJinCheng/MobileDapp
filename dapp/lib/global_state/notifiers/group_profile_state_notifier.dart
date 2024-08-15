@@ -1,46 +1,116 @@
 import 'package:dapp/model/group_profile_model.dart';
+import 'package:dapp/services/event_listener_manager.dart';
 import 'package:dapp/services/group_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:web3dart/credentials.dart';
 import 'package:web3dart/web3dart.dart';
 
 class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
   final GroupService groupService;
+  final EventListenerManager eventListenerManager;
 
-  GroupProfileNotifier(this.groupService) : super({}) {
+  GroupProfileNotifier(this.groupService, this.eventListenerManager)
+      : super({}) {
     _listenToGroupEvents();
   }
 
+  bool get isEmpty => state.isEmpty;
+
   Future<void> loadGroupProfiles() async {
-    List<GroupProfile> groups =
-        await groupService.fetchGroupProfilesFromBlockchain();
-    state = {for (var group in groups) group.groupName: group};
+    List<GroupProfile> groups = await groupService.fetchGroupProfiles();
+    state = {for (var group in groups) group.groupID: group};
   }
 
   void updateGroup(GroupProfile group) {
     state = {
       ...state,
-      group.groupName: group,
+      group.groupID: group,
     };
   }
 
-  bool get isEmpty => state.isEmpty;
-
-  _listenToGroupEvents() {
-    groupService.listenToGroupCreatedEvents(_handleGroupCreated);
+  void removeGroup(String groupID) {
+    Map<String, GroupProfile> newState = Map<String, GroupProfile>.from(state);
+    newState.remove(groupID);
+    state = newState;
   }
 
-  void _handleGroupCreated(String groupName, EthereumAddress owner) async {
-    if (owner == groupService.userAddress) {
-      final group =
-          await groupService.fetchGroupProfileFromBlockChain(groupName);
-      String groupSize = group[0].toString();
-      String groupDeposit = group[1].toString();
+  _listenToGroupEvents() async {
+    List<String> escrowAddresses =
+        await groupService.fetchEscrowMembershipAddresses();
+    escrowAddresses.add(groupService.escrowAddress.toString());
 
-      updateGroup(GroupProfile(
-          groupName: groupName,
-          deposit: groupDeposit,
-          groupImagePath: 'assets/default_avatar.jpg',
-          membersCount: groupSize));
+    for (String address in escrowAddresses) {
+      eventListenerManager.listenToGroupCreatedEvents(
+          address, _handleGroupCreated);
+      eventListenerManager.listenToGroupDisbandedEvents(
+          address, _handleGroupDisbanded);
     }
+    eventListenerManager
+        .listenToEscrowRegisteredEvents(_handleEscrowRegistered);
+    eventListenerManager
+        .listenToEscrowDeregisteredEvents(_handleEscrowDeregistered);
+  }
+
+  void _handleGroupCreated(String groupName, List<EthereumAddress> members,
+      String memberContractAddress) async {
+    for (EthereumAddress member in members) {
+      if (member == groupService.userAddress) {
+        await _fetchAndUpdateGroup(groupName, memberContractAddress);
+        break;
+      }
+    }
+  }
+
+  void _handleGroupDisbanded(String groupName, List<EthereumAddress> members,
+      String memberContractAddress) async {
+    for (EthereumAddress member in members) {
+      if (member == groupService.userAddress) {
+        String groupID =
+            groupService.generateUniqueID(groupName, memberContractAddress);
+        removeGroup(groupID);
+        break;
+      }
+    }
+  }
+
+  void _handleEscrowRegistered(
+      String groupName,
+      EthereumAddress memberContractAddress,
+      EthereumAddress memberAddress) async {
+    if (memberAddress == groupService.userAddress) {
+      String memberContractAddressStr = memberContractAddress.toString();
+      eventListenerManager.listenToGroupCreatedEvents(
+          memberContractAddressStr, _handleGroupCreated);
+      eventListenerManager.listenToGroupDisbandedEvents(
+          memberContractAddressStr, _handleGroupDisbanded);
+      await _fetchAndUpdateGroup(groupName, memberContractAddressStr);
+    }
+  }
+
+  void _handleEscrowDeregistered(
+      String groupName,
+      EthereumAddress memberContractAddress,
+      EthereumAddress memberAddress) async {
+    if (memberAddress == groupService.userAddress) {
+      eventListenerManager
+          .stopListeningForContract(memberContractAddress.toString());
+    }
+  }
+
+  Future<void> _fetchAndUpdateGroup(
+      String groupName, String memberContractAddress) async {
+    final group =
+        await groupService.fetchGroupProfile(memberContractAddress, groupName);
+    String groupSize = group[0].toString();
+    String groupDeposit = group[1].toString();
+    String groupID =
+        groupService.generateUniqueID(groupName, memberContractAddress);
+    updateGroup(GroupProfile(
+        groupID: groupID,
+        groupName: groupName,
+        contractAddress: memberContractAddress,
+        deposit: groupDeposit,
+        groupImagePath: 'assets/default_avatar.jpg',
+        membersCount: groupSize));
   }
 }

@@ -1,6 +1,7 @@
 enum EscrowFactoryFunctions {
   deployEscrow,
   getEscrow,
+  getMyGroupsEscrow,
 }
 
 extension EscrowFactoryFunctionsExtension on EscrowFactoryFunctions {
@@ -10,6 +11,8 @@ extension EscrowFactoryFunctionsExtension on EscrowFactoryFunctions {
         return 'deployEscrow';
       case EscrowFactoryFunctions.getEscrow:
         return 'getEscrow';
+      case EscrowFactoryFunctions.getMyGroupsEscrow:
+        return 'getMyGroupsEscrow';
       default:
         throw ArgumentError('Invalid function');
     }
