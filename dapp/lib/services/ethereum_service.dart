@@ -93,8 +93,13 @@ class EthereumService {
 
   callFunction(
       String contractAddress, String functionName, List<dynamic> args) async {
-    DeployedContract deployedContract =
-        await loadEscrowContract(contractAddress);
+    DeployedContract deployedContract;
+    if (functionName == EscrowFactoryFunctions.deployEscrow.functionName) {
+      deployedContract = await loadFactoryContract();
+    } else {
+      deployedContract = await loadEscrowContract(contractAddress);
+    }
+
     final function = deployedContract.function(functionName);
     try {
       final result = await _client.sendTransaction(
