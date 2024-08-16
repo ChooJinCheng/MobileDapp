@@ -112,7 +112,7 @@ class EthereumService {
       while (receipt == null) {
         receipt = await _client.getTransactionReceipt(result);
         if (receipt == null) {
-          await Future.delayed(Duration(seconds: 1));
+          await Future.delayed(const Duration(seconds: 1));
         }
       }
 

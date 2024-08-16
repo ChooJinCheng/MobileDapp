@@ -26,18 +26,18 @@ class _ManageTransactionViewState extends State<ManageTransactionView> {
           )
         ],
       ),
-      body: CustomScrollView(slivers: [
+      body: const CustomScrollView(slivers: [
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
           sliver: SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Transaction Approval',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(
+                SizedBox(
                   height: 8.0,
                 ),
               ],

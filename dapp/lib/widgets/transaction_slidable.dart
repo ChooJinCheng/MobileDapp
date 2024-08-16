@@ -39,13 +39,13 @@ Widget transactionSlidable() {
                   backgroundColor: Colors.black,
                 ),
                 const SizedBox(width: 10),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'John',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 18.0, fontWeight: FontWeight.bold),
                       ),
                       Text('John initiated to get \$25 from you for "Putien"'),
@@ -55,14 +55,14 @@ Widget transactionSlidable() {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
+                    const Text(
                       '30 May 2024',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 11.0,
                           fontWeight: FontWeight.w400,
                           color: Color.fromRGBO(124, 124, 124, 1.0)),
                     ),
-                    SizedBox(height: 5.0),
+                    const SizedBox(height: 5.0),
                     Text(
                       '-\$25',
                       style: TextStyle(

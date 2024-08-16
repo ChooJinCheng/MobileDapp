@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AddExpenseScreen extends StatelessWidget {
-  const AddExpenseScreen({Key? key}) : super(key: key);
+  const AddExpenseScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +51,8 @@ class AddExpenseScreen extends StatelessWidget {
             TextField(
               decoration: InputDecoration(
                 hintText: 'Enter a description',
-                suffixIcon: Icon(Icons.receipt_long, color: Colors.purple),
+                suffixIcon:
+                    const Icon(Icons.receipt_long, color: Colors.purple),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
