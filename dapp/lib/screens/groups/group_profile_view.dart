@@ -112,7 +112,7 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
           foregroundColor: Colors.white,
           backgroundColor: const Color.fromRGBO(35, 217, 157, 1.0),
           onPressed: () {
-            context.pushNamed('addExpense');
+            context.pushNamed('addExpense', extra: groupProfile);
           },
         ),
       ),

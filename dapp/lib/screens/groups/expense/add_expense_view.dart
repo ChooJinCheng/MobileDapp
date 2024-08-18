@@ -1,42 +1,70 @@
 import 'package:choice/choice.dart';
 import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/model/constants/categories_mapping.dart';
+import 'package:dapp/model/group_profile_model.dart';
+import 'package:dapp/widgets/member_multi_choice_input.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddExpenseView extends StatefulWidget {
-  const AddExpenseView({super.key});
+  final GroupProfile groupProfile;
+  const AddExpenseView({super.key, required this.groupProfile});
 
   @override
   State<AddExpenseView> createState() => _AddExpenseViewState();
 }
 
 class _AddExpenseViewState extends State<AddExpenseView> {
-  final formKey = GlobalKey<FormState>();
+  Map<String, String> _memberNameToAddresses = {};
+  List<String> _selectedMembers = [];
 
   TransactionCategory selectedCategory = TransactionCategory.food;
-  String selectedCurrency = 'USD';
-  String selectedCreditor = 'You';
-  String selectedSplitMethod = 'Equally';
-  String selectedDateTime = 'Now';
-  String selectedRateMethod = 'Market';
+  String _selectedCurrency = 'USD';
+  String _selectedPayer = 'You';
+  String _selectedSplitMethod = 'Equally';
+  String _selectedDateTime = 'Now';
+  String _selectedRateMethod = 'Market';
 
-  List<String> members = [
-    'John',
-    'Mary',
-    'Gerald',
-    'Karen',
-    'Kelvin',
-  ];
+  final formKey = GlobalKey<FormState>();
 
-  List<String> selectedMembers = [];
+  @override
+  void initState() {
+    _loadContactAddresses();
+    super.initState();
+  }
 
-  void setSelectedMembers(List<String> value) {
-    setState(() => selectedMembers = value);
+  Future<void> _loadContactAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    Map<String, String> contacts = {};
+    List<String> memberAddresses = widget.groupProfile.memberAddresses;
+    Set<String> keys = prefs.getKeys();
+    print('keys: $keys');
+    for (String memberAddress in memberAddresses) {
+      print('Name: ${prefs.getString(memberAddress)} and addr: $memberAddress');
+      String name = (prefs.getString(memberAddress)) ?? memberAddress;
+      contacts[name] = memberAddress;
+    }
+    print('mem value $contacts');
+    setState(() {
+      _memberNameToAddresses = contacts;
+    });
+  }
+
+  void _setSelectedMembers(List<String> value) {
+    setState(() => _selectedMembers = value);
+  }
+
+  String? _validateSelectedAddresses(List<String>? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please select at least 1 member';
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final GroupProfile groupProfile = widget.groupProfile;
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0.0,
@@ -73,14 +101,34 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                           color: Color.fromRGBO(124, 124, 124, 1.0)),
                     ),
                   ),
-                  Expanded(flex: 4, child: membersMultiChoiceInput())
+                  Expanded(
+                    flex: 4,
+                    child: FormField<List<String>>(
+                      initialValue: _selectedMembers,
+                      validator: _validateSelectedAddresses,
+                      builder: (FormFieldState<List<String>> state) {
+                        return Column(
+                          children: [
+                            membersMultiChoiceInput(state, _selectedMembers,
+                                _memberNameToAddresses, _setSelectedMembers),
+                            if (state.hasError)
+                              Text(
+                                state.errorText ?? '',
+                                style: TextStyle(color: Colors.red.shade900),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  )
                 ],
               ),
               const SizedBox(height: 24),
-              const Center(
+              Center(
                 child: Text(
-                  'Group X',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  groupProfile.groupName,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 24),
@@ -153,7 +201,7 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                                 .pushNamed<String>('selectCurrency');
                             if (currencyResult != null) {
                               setState(() {
-                                selectedCurrency = currencyResult;
+                                _selectedCurrency = currencyResult;
                               });
                             }
                           },
@@ -167,7 +215,7 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                                     style: BorderStyle.solid, width: 0.5)),
                             child: Center(
                                 child: Text(
-                              selectedCurrency,
+                              _selectedCurrency,
                               style: const TextStyle(
                                   color: Color.fromRGBO(116, 96, 255, 1.0)),
                             )),
@@ -182,12 +230,12 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                   const SizedBox(width: 8.0),
                   ElevatedButton(
                       onPressed: () async {
-                        final creditorResult = await context.pushNamed<String>(
-                            'selectCreditor',
-                            extra: selectedMembers);
-                        if (creditorResult != null) {
+                        final payerResult = await context.pushNamed<String>(
+                            'selectPayer',
+                            extra: _selectedMembers);
+                        if (payerResult != null) {
                           setState(() {
-                            selectedCreditor = creditorResult;
+                            _selectedPayer = payerResult;
                           });
                         }
                       },
@@ -199,7 +247,7 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                                   style: BorderStyle.solid, width: 0.5),
                               borderRadius: BorderRadius.circular(12.0)))),
                       child: Text(
-                        selectedCreditor,
+                        _selectedPayer,
                         style: const TextStyle(
                             color: Color.fromRGBO(116, 96, 255, 1.0)),
                       )),
@@ -212,7 +260,7 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                             .pushNamed<String>('selectSplitMethod');
                         if (splitResult != null) {
                           setState(() {
-                            selectedSplitMethod = splitResult;
+                            _selectedSplitMethod = splitResult;
                           });
                         }
                       },
@@ -224,7 +272,7 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                                   style: BorderStyle.solid, width: 0.5),
                               borderRadius: BorderRadius.circular(12.0)))),
                       child: Text(
-                        selectedSplitMethod,
+                        _selectedSplitMethod,
                         style: const TextStyle(
                             color: Color.fromRGBO(116, 96, 255, 1.0)),
                       )),
@@ -245,7 +293,7 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                                   style: BorderStyle.solid, width: 0.5),
                               borderRadius: BorderRadius.circular(12.0)))),
                       child: Text(
-                        selectedDateTime,
+                        _selectedDateTime,
                         style: const TextStyle(
                             color: Color.fromRGBO(116, 96, 255, 1.0)),
                       )),
@@ -262,7 +310,7 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                                   style: BorderStyle.solid, width: 0.5),
                               borderRadius: BorderRadius.circular(12.0)))),
                       child: Text(
-                        selectedRateMethod,
+                        _selectedRateMethod,
                         style: const TextStyle(
                             color: Color.fromRGBO(116, 96, 255, 1.0)),
                       )),
@@ -272,50 +320,6 @@ class _AddExpenseViewState extends State<AddExpenseView> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget membersMultiChoiceInput() {
-    return Choice<String>.prompt(
-      title: 'Members',
-      multiple: true,
-      confirmation: true,
-      value: selectedMembers,
-      onChanged: setSelectedMembers,
-      itemCount: members.length,
-      itemSkip: (state, i) =>
-          !ChoiceSearch.match(members[i], state.search?.value),
-      itemBuilder: (state, i) {
-        return CheckboxListTile(
-          value: state.selected(members[i]),
-          onChanged: state.onSelected(members[i]),
-          title: ChoiceText(
-            members[i],
-            highlight: state.search?.value,
-          ),
-        );
-      },
-      modalHeaderBuilder: ChoiceModal.createHeader(
-        automaticallyImplyLeading: false,
-        actionsBuilder: [
-          ChoiceModal.createConfirmButton(),
-          ChoiceModal.createSpacer(width: 10),
-        ],
-      ),
-      modalFooterBuilder: (state) {
-        return Column(
-          children: [
-            CheckboxListTile(
-              value: state.selectedMany(members),
-              onChanged: state.onSelectedMany(members),
-              tristate: true,
-              title: const Text('Select All'),
-            ),
-            const SizedBox(height: 75.0)
-          ],
-        );
-      },
-      promptDelegate: ChoicePrompt.delegateBottomSheet(),
     );
   }
 }

@@ -1,9 +1,10 @@
+import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/screens/contacts/add_contact_view.dart';
 import 'package:dapp/screens/contacts/my_contact_view.dart';
 import 'package:dapp/screens/groups/expense/add_expense_view.dart';
 import 'package:dapp/screens/groups/add_group_view.dart';
 import 'package:dapp/screens/groups/expense/select_category_view.dart';
-import 'package:dapp/screens/groups/expense/select_creditor_view.dart';
+import 'package:dapp/screens/groups/expense/select_payer_view.dart';
 import 'package:dapp/screens/groups/expense/select_currency_view.dart';
 import 'package:dapp/screens/groups/expense/select_split_method_view.dart';
 import 'package:dapp/screens/groups/group_profile_view.dart';
@@ -102,17 +103,20 @@ class AppNavigation {
                       ),
                     ),
                     GoRoute(
-                      path: 'addExpense',
-                      name: 'addExpense',
-                      pageBuilder: (context, state) =>
-                          CustomTransitionPage<void>(
-                        key: state.pageKey,
-                        child: const AddExpenseView(),
-                        transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) =>
-                            FadeTransition(opacity: animation, child: child),
-                      ),
-                    ),
+                        path: 'addExpense',
+                        name: 'addExpense',
+                        pageBuilder: (context, state) {
+                          final GroupProfile groupProfile =
+                              state.extra as GroupProfile;
+                          return CustomTransitionPage<void>(
+                            key: state.pageKey,
+                            child: AddExpenseView(groupProfile: groupProfile),
+                            transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) =>
+                                FadeTransition(
+                                    opacity: animation, child: child),
+                          );
+                        }),
                     GoRoute(
                       path: 'selectCategory',
                       name: 'selectCategory',
@@ -138,14 +142,14 @@ class AppNavigation {
                       ),
                     ),
                     GoRoute(
-                        path: 'selectCreditor',
-                        name: 'selectCreditor',
+                        path: 'selectPayer',
+                        name: 'selectPayer',
                         pageBuilder: (context, state) {
                           final List<String> selectedMembers =
                               state.extra as List<String>;
                           return CustomTransitionPage<void>(
                             key: state.pageKey,
-                            child: SelectCreditorView(
+                            child: SelectPayerView(
                                 selectedMembers: selectedMembers),
                             transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) =>

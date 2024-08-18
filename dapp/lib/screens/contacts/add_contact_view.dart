@@ -78,8 +78,8 @@ class _AddContactViewState extends State<AddContactView> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     _saveContact(
-                      _nameController.text,
-                      _addressController.text,
+                      _nameController.text.toLowerCase(),
+                      _addressController.text.toLowerCase(),
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Contact Saved')),

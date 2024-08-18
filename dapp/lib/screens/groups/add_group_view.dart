@@ -1,4 +1,5 @@
 import 'package:dapp/global_state/providers/group_service_provider.dart';
+import 'package:dapp/widgets/member_multi_choice_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:choice/choice.dart';
@@ -14,7 +15,7 @@ class AddGroupView extends ConsumerStatefulWidget {
 }
 
 class _AddGroupViewState extends ConsumerState<AddGroupView> {
-  Map<String, String> _memberAddresses = {};
+  Map<String, String> _memberNameToAddresses = {};
   List<String> _selectedMembers = [];
 
   final _groupNameController = TextEditingController();
@@ -34,7 +35,7 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
       contacts[prefs.getString(key)!] = key;
     }
     setState(() {
-      _memberAddresses = contacts;
+      _memberNameToAddresses = contacts;
     });
   }
 
@@ -82,8 +83,8 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
                   List<dynamic> args = [];
                   String groupName = _groupNameController.text;
                   List<EthereumAddress> members = _selectedMembers
-                      .map((name) =>
-                          EthereumAddress.fromHex(_memberAddresses[name]!))
+                      .map((name) => EthereumAddress.fromHex(
+                          _memberNameToAddresses[name]!))
                       .toList();
                   members.add(groupService.userAddress);
                   args.add(groupName);
@@ -137,45 +138,8 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
                 builder: (FormFieldState<List<String>> state) {
                   return Column(
                     children: [
-                      Choice<String>.prompt(
-                        title: 'Members Address',
-                        multiple: true,
-                        confirmation: true,
-                        value: _selectedMembers,
-                        onChanged: (value) {
-                          _setSelectedMembers(value);
-                          state.didChange(value);
-                        },
-                        itemCount: _memberAddresses.length,
-                        itemBuilder: (state, i) {
-                          final name = _memberAddresses.keys.elementAt(i);
-                          return CheckboxListTile(
-                            value: state.selected(name),
-                            onChanged: state.onSelected(name),
-                            title: ChoiceText(
-                              name,
-                              highlight: state.search?.value,
-                            ),
-                          );
-                        },
-                        modalHeaderBuilder: ChoiceModal.createHeader(
-                          automaticallyImplyLeading: false,
-                          actionsBuilder: [
-                            ChoiceModal.createConfirmButton(),
-                            ChoiceModal.createSpacer(width: 10),
-                          ],
-                        ),
-                        modalSeparatorBuilder: (state) {
-                          final names = _memberAddresses.keys.toList();
-                          return CheckboxListTile(
-                            value: state.selectedMany(names),
-                            onChanged: state.onSelectedMany(names),
-                            tristate: true,
-                            title: const Text('Select All'),
-                          );
-                        },
-                        promptDelegate: ChoicePrompt.delegateNewPage(),
-                      ),
+                      membersMultiChoiceInput(state, _selectedMembers,
+                          _memberNameToAddresses, _setSelectedMembers),
                       if (state.hasError)
                         Text(
                           state.errorText ?? '',
