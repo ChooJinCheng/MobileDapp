@@ -1,3 +1,4 @@
+import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/model/user_transaction_model.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,7 @@ Widget recentTransactionList(
               transactionViewCard(
                   userTransaction.groupName,
                   userTransaction.transactionType,
-                  userTransaction.dateTime,
+                  userTransaction.date,
                   userTransaction.transactAmount,
                   userTransaction.category))
       ],
@@ -47,8 +48,9 @@ Widget recentTransactionList(
   );
 }
 
-Widget transactionViewCard(String groupName, String transactionType,
-    String dateTime, String transactAmount, String category) {
+//Need to synchronize with created enums and mappings
+Widget transactionViewCard(String groupName, bool transactionType, String date,
+    String transactAmount, TransactionCategory category) {
   Map<String, IconData> categories = {
     'food': Icons.local_dining,
     'activity': Icons.attractions,
@@ -57,7 +59,7 @@ Widget transactionViewCard(String groupName, String transactionType,
     'apparel': Icons.checkroom
   };
   Color? transactionColor = Colors.green[700];
-  if (transactionType == 'receive') {
+  if (transactionType) {
     transactAmount = '+\$$transactAmount';
     groupName = '$groupName "You get"';
   } else {
@@ -82,7 +84,7 @@ Widget transactionViewCard(String groupName, String transactionType,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
-            categories[category],
+            categories[category.categoryName],
             color: Colors.blue,
           ),
         ),
@@ -92,7 +94,7 @@ Widget transactionViewCard(String groupName, String transactionType,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(groupName, style: const TextStyle(fontSize: 16)),
-              Text(dateTime, style: const TextStyle(color: Colors.black54)),
+              Text(date, style: const TextStyle(color: Colors.black54)),
             ],
           ),
         ),

@@ -1,4 +1,5 @@
 import 'package:choice/choice.dart';
+import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/model/constants/categories_mapping.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,7 @@ class AddExpenseView extends StatefulWidget {
 class _AddExpenseViewState extends State<AddExpenseView> {
   final formKey = GlobalKey<FormState>();
 
-  String selectedCategory = 'food';
+  TransactionCategory selectedCategory = TransactionCategory.food;
   String selectedCurrency = 'USD';
   String selectedCreditor = 'You';
   String selectedSplitMethod = 'Equally';
@@ -103,8 +104,9 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                       flex: 1,
                       child: InkWell(
                           onTap: () async {
-                            final categoryResult = await context
-                                .pushNamed<String>('selectCategory');
+                            final categoryResult =
+                                await context.pushNamed<TransactionCategory>(
+                                    'selectCategory');
                             if (categoryResult != null) {
                               setState(() {
                                 selectedCategory = categoryResult;
@@ -120,7 +122,7 @@ class _AddExpenseViewState extends State<AddExpenseView> {
                                 border: Border.all(
                                     style: BorderStyle.solid, width: 0.5)),
                             child: Icon(
-                              categories[selectedCategory],
+                              categories[selectedCategory.categoryName],
                               color: const Color.fromRGBO(116, 96, 255, 1.0),
                             ),
                           ))),

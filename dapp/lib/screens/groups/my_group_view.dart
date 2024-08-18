@@ -14,33 +14,6 @@ class MyGroupView extends ConsumerStatefulWidget {
 }
 
 class _MyGroupViewState extends ConsumerState<MyGroupView> {
-  /* final List<GroupProfile> groupProfiles = [
-    GroupProfile(
-        groupID: 1,
-        groupName: 'Dog Lovers',
-        deposit: '100.00',
-        groupImagePath: 'assets/default_avatar.jpg',
-        membersCount: '3'),
-    GroupProfile(
-        groupID: 2,
-        groupName: 'Cat Lovers',
-        deposit: '310.12',
-        groupImagePath: 'assets/cat.jpg',
-        membersCount: '2'),
-    GroupProfile(
-        groupID: 3,
-        groupName: 'Bird Lovers',
-        deposit: '3154.11',
-        groupImagePath: 'assets/bird.jpg',
-        membersCount: '5'),
-    GroupProfile(
-        groupID: 4,
-        groupName: 'Flower Lovers',
-        deposit: '16804.37',
-        groupImagePath: 'assets/flower.jpg',
-        membersCount: '2')
-  ]; */
-
   @override
   void initState() {
     super.initState();
@@ -65,6 +38,16 @@ class _MyGroupViewState extends ConsumerState<MyGroupView> {
           'Groups',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              context.pushNamed('contact');
+            },
+            icon: const Icon(Icons.import_contacts_sharp),
+            tooltip: 'View Contacts',
+            iconSize: 28.0,
+          )
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

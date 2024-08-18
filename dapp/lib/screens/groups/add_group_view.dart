@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:choice/choice.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web3dart/web3dart.dart';
 
 class AddGroupView extends ConsumerStatefulWidget {
@@ -13,23 +14,51 @@ class AddGroupView extends ConsumerStatefulWidget {
 }
 
 class _AddGroupViewState extends ConsumerState<AddGroupView> {
-  List<String> memberAddresses = [
-    '0x9DfaA7fEcE71a8141186712bB27FEF47C2B02132',
-    '0xC3700793F250658D807bcdF9338ACF609f6153eA',
-    '0x09f15c0739Ec4F7343b50131Be5A8aDA09A30fA8',
-  ];
-  List<String> selectedAddresses = [];
+  Map<String, String> _memberAddresses = {};
+  List<String> _selectedMembers = [];
 
-  final groupNameFieldController = TextEditingController();
-  final formKey = GlobalKey<FormState>();
+  final _groupNameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
-  void setSelectedAddresses(List<String> value) {
-    setState(() => selectedAddresses = value);
+  @override
+  void initState() {
+    super.initState();
+    _loadContactAddresses();
+  }
+
+  Future<void> _loadContactAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    Map<String, String> contacts = {};
+    for (String key in keys) {
+      contacts[prefs.getString(key)!] = key;
+    }
+    setState(() {
+      _memberAddresses = contacts;
+    });
+  }
+
+  void _setSelectedMembers(List<String> value) {
+    setState(() => _selectedMembers = value);
+  }
+
+  String? _validateGroupName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your group name';
+    }
+    return null;
+  }
+
+  String? _validateSelectedAddresses(List<String>? value) {
+    if (value == null || value.length < 2) {
+      return 'Please select at least 2 choices';
+    }
+    return null;
   }
 
   @override
   void dispose() {
-    groupNameFieldController.dispose();
+    _groupNameController.dispose();
     super.dispose();
   }
 
@@ -48,14 +77,15 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
         actions: [
           IconButton(
             onPressed: () {
-              if (formKey.currentState!.validate()) {
+              if (_formKey.currentState!.validate()) {
                 List<dynamic> args = [];
-                String groupName = groupNameFieldController.text;
-                List<EthereumAddress> selectedMembers = selectedAddresses
-                    .map((address) => EthereumAddress.fromHex(address))
+                String groupName = _groupNameController.text;
+                List<EthereumAddress> members = _selectedMembers
+                    .map((name) =>
+                        EthereumAddress.fromHex(_memberAddresses[name]!))
                     .toList();
                 args.add(groupName);
-                args.add(selectedMembers);
+                args.add(members);
                 try {
                   groupService.addNewGroup(args);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -76,7 +106,7 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
         ],
       ),
       body: Form(
-        key: formKey,
+        key: _formKey,
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Column(
@@ -91,29 +121,18 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextFormField(
-                      controller: groupNameFieldController,
-                      decoration: const InputDecoration(
-                        labelText: 'Group Name',
-                      ),
-                      // The validator receives the text that the user has entered.
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your group name';
-                        }
-                        return null;
-                      },
-                    ),
+                        controller: _groupNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Group Name',
+                        ),
+                        // The validator receives the text that the user has entered.
+                        validator: _validateGroupName),
                   ),
                 ],
               ),
               FormField<List<String>>(
-                initialValue: selectedAddresses,
-                validator: (value) {
-                  if (value == null || value.length < 2) {
-                    return 'Please select at least 2 choices';
-                  }
-                  return null;
-                },
+                initialValue: _selectedMembers,
+                validator: _validateSelectedAddresses,
                 builder: (FormFieldState<List<String>> state) {
                   return Column(
                     children: [
@@ -121,18 +140,19 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
                         title: 'Members Address',
                         multiple: true,
                         confirmation: true,
-                        value: selectedAddresses,
+                        value: _selectedMembers,
                         onChanged: (value) {
-                          setSelectedAddresses(value);
+                          _setSelectedMembers(value);
                           state.didChange(value);
                         },
-                        itemCount: memberAddresses.length,
+                        itemCount: _memberAddresses.length,
                         itemBuilder: (state, i) {
+                          final name = _memberAddresses.keys.elementAt(i);
                           return CheckboxListTile(
-                            value: state.selected(memberAddresses[i]),
-                            onChanged: state.onSelected(memberAddresses[i]),
+                            value: state.selected(name),
+                            onChanged: state.onSelected(name),
                             title: ChoiceText(
-                              memberAddresses[i],
+                              name,
                               highlight: state.search?.value,
                             ),
                           );
@@ -145,9 +165,10 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
                           ],
                         ),
                         modalSeparatorBuilder: (state) {
+                          final names = _memberAddresses.keys.toList();
                           return CheckboxListTile(
-                            value: state.selectedMany(memberAddresses),
-                            onChanged: state.onSelectedMany(memberAddresses),
+                            value: state.selectedMany(names),
+                            onChanged: state.onSelectedMany(names),
                             tristate: true,
                             title: const Text('Select All'),
                           );

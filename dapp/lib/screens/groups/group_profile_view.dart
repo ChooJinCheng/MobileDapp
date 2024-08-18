@@ -1,3 +1,5 @@
+import 'package:dapp/enum/transaction_category_enum.dart';
+import 'package:dapp/enum/transaction_status_enum.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/model/user_transaction_model.dart';
 import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
@@ -35,49 +37,53 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
 
   final List<UserTransaction> userTransactions = [
     UserTransaction(
+        transactID: '1',
         groupName: 'Dog Lovers',
-        transactionType: 'receive',
-        dateTime: '13 August, 10:00AM',
+        transactionType: true,
+        date: '13 August, 10:00AM',
         transactAmount: '54',
-        category: 'food',
+        category: TransactionCategory.food,
         totalAmount: '162',
         transactTitle: 'Japanese Restaurant',
         transactInitiator: 'You',
-        transactCreditor: 'You',
-        transactStatus: 'Approved'),
+        transactPayee: 'You',
+        transactStatus: TransactionStatus.approved),
     UserTransaction(
+        transactID: '2',
         groupName: 'Cat Lovers',
-        transactionType: 'send',
-        dateTime: '12 August, 11:00PM',
+        transactionType: false,
+        date: '12 August, 11:00PM',
         transactAmount: '25',
-        category: 'transport',
+        category: TransactionCategory.transport,
         totalAmount: '75',
         transactTitle: 'Grab from Jurong West to Tampines',
         transactInitiator: 'Mary',
-        transactCreditor: 'Mary',
-        transactStatus: 'Approved'),
+        transactPayee: 'Mary',
+        transactStatus: TransactionStatus.approved),
     UserTransaction(
+        transactID: '3',
         groupName: 'Bird Lovers',
-        transactionType: 'send',
-        dateTime: '09 August, 09:00AM',
+        transactionType: false,
+        date: '09 August, 09:00AM',
         transactAmount: '65',
-        category: 'activity',
+        category: TransactionCategory.activity,
         totalAmount: '195',
         transactTitle: 'Bird Sight Equipment Rental',
         transactInitiator: 'Mary',
-        transactCreditor: 'John',
-        transactStatus: 'Approved'),
+        transactPayee: 'John',
+        transactStatus: TransactionStatus.approved),
     UserTransaction(
+        transactID: '4',
         groupName: 'Flower Lovers',
-        transactionType: 'receive',
-        dateTime: '08 August, 05:00PM',
+        transactionType: true,
+        date: '08 August, 05:00PM',
         transactAmount: '-',
-        category: 'apparel',
+        category: TransactionCategory.apparel,
         totalAmount: '162',
         transactTitle: 'Uniqlo flower series',
         transactInitiator: 'Mary',
-        transactCreditor: 'You',
-        transactStatus: 'Rejected'),
+        transactPayee: 'You',
+        transactStatus: TransactionStatus.declined),
   ];
   String filterValue = 'All';
 
@@ -117,10 +123,8 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                groupProfileCard(
-                    groupProfile,
-                    groupProfile
-                        .contractAddress), //TODO: Insert real transaction pending count
+                groupProfileCard(groupProfile,
+                    '3'), //TODO: Insert real transaction pending count
                 const SizedBox(
                   height: 16.0,
                 ),

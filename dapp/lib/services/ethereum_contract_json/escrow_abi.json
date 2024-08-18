@@ -160,6 +160,25 @@
         "inputs": [
             {
                 "indexed": true,
+                "internalType": "address",
+                "name": "decliner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "transactionId",
+                "type": "uint256"
+            }
+        ],
+        "name": "TransactionDeclined",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
                 "internalType": "uint256",
                 "name": "transactionId",
                 "type": "uint256"
@@ -274,6 +293,24 @@
             }
         ],
         "name": "createGroup",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "groupName",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_transactionId",
+                "type": "uint256"
+            }
+        ],
+        "name": "declineTransaction",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -416,9 +453,9 @@
                 "type": "uint256"
             },
             {
-                "internalType": "bool",
-                "name": "executed",
-                "type": "bool"
+                "internalType": "enum TxnStatus",
+                "name": "txnStatus",
+                "type": "uint8"
             },
             {
                 "internalType": "uint256",
@@ -438,8 +475,18 @@
         "inputs": [
             {
                 "internalType": "string",
-                "name": "groupName",
+                "name": "_groupName",
                 "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "_txnName",
+                "type": "string"
+            },
+            {
+                "internalType": "enum TxnCategory",
+                "name": "_txnCategory",
+                "type": "uint8"
             },
             {
                 "internalType": "address",
@@ -525,6 +572,11 @@
         "outputs": [
             {
                 "internalType": "address",
+                "name": "initiator",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
                 "name": "payer",
                 "type": "address"
             },
@@ -534,19 +586,19 @@
                 "type": "string"
             },
             {
+                "internalType": "string",
+                "name": "txnName",
+                "type": "string"
+            },
+            {
                 "internalType": "uint256",
                 "name": "value",
                 "type": "uint256"
             },
             {
-                "internalType": "bool",
-                "name": "executed",
-                "type": "bool"
-            },
-            {
-                "internalType": "bool",
-                "name": "txnType",
-                "type": "bool"
+                "internalType": "enum TxnCategory",
+                "name": "txnCategory",
+                "type": "uint8"
             },
             {
                 "internalType": "enum TxnStatus",

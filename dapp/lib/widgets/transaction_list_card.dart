@@ -1,3 +1,5 @@
+import 'package:dapp/enum/transaction_category_enum.dart';
+import 'package:dapp/enum/transaction_status_enum.dart';
 import 'package:dapp/model/user_transaction_model.dart';
 import 'package:flutter/material.dart';
 import 'package:dapp/model/constants/categories_mapping.dart';
@@ -6,19 +8,19 @@ Widget transactionListCard(UserTransaction userTransaction) {
   String transactAmount = userTransaction.transactAmount;
   String totalAmount = userTransaction.totalAmount;
   String transactTitle = userTransaction.transactTitle;
-  String category = userTransaction.category;
-  String transactCreditor = userTransaction.transactCreditor;
-  String transactStatus = userTransaction.transactStatus;
-  String transactionType = userTransaction.transactionType;
+  TransactionCategory category = userTransaction.category;
+  String transactPayee = userTransaction.transactPayee;
+  TransactionStatus transactStatus = userTransaction.transactStatus;
+  bool transactionType = userTransaction.transactionType;
 
   Color? statusColor = Colors.green[700];
   Color? transactionColor = Colors.green[700];
-  if (transactStatus.toLowerCase() == 'rejected') {
+  if (transactStatus == TransactionStatus.declined) {
     statusColor = Colors.redAccent[700];
     transactionColor = Colors.black54;
     transactAmount = '--';
   } else {
-    if (transactionType == 'receive') {
+    if (transactionType) {
       transactAmount = '+\$$transactAmount';
     } else {
       transactAmount = '-\$$transactAmount';
@@ -54,7 +56,7 @@ Widget transactionListCard(UserTransaction userTransaction) {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              categories[category],
+              categories[category.categoryName],
               color: Colors.blue,
               size: 30.0,
             ),
@@ -66,9 +68,9 @@ Widget transactionListCard(UserTransaction userTransaction) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(transactTitle, style: const TextStyle(fontSize: 15)),
-                Text('$transactCreditor paid \$$totalAmount',
+                Text('$transactPayee paid \$$totalAmount',
                     style: const TextStyle(color: Colors.black54)),
-                Text(transactStatus,
+                Text(transactStatus.statusName,
                     style: TextStyle(fontSize: 14, color: statusColor)),
               ],
             ),

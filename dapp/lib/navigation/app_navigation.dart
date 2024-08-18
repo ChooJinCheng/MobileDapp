@@ -1,3 +1,5 @@
+import 'package:dapp/screens/contacts/add_contact_view.dart';
+import 'package:dapp/screens/contacts/my_contact_view.dart';
 import 'package:dapp/screens/groups/expense/add_expense_view.dart';
 import 'package:dapp/screens/groups/add_group_view.dart';
 import 'package:dapp/screens/groups/expense/select_category_view.dart';
@@ -50,6 +52,30 @@ class AppNavigation {
                     return const MyGroupView();
                   },
                   routes: [
+                    GoRoute(
+                      path: 'contact',
+                      name: 'contact',
+                      pageBuilder: (context, state) =>
+                          CustomTransitionPage<void>(
+                        key: state.pageKey,
+                        child: const MyContactView(),
+                        transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) =>
+                            FadeTransition(opacity: animation, child: child),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'addContact',
+                      name: 'addContact',
+                      pageBuilder: (context, state) =>
+                          CustomTransitionPage<void>(
+                        key: state.pageKey,
+                        child: const AddContactView(),
+                        transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) =>
+                            FadeTransition(opacity: animation, child: child),
+                      ),
+                    ),
                     GoRoute(
                       path: 'addGroup',
                       name: 'addGroup',
