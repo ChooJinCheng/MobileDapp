@@ -5,6 +5,7 @@ class GroupProfile {
   String deposit;
   String groupImagePath;
   String membersCount;
+  List<String> memberAddresses;
 
   GroupProfile(
       {required this.groupID,
@@ -12,5 +13,6 @@ class GroupProfile {
       required this.contractAddress,
       required this.deposit,
       required this.groupImagePath,
-      required this.membersCount});
+      required this.membersCount,
+      required this.memberAddresses});
 }

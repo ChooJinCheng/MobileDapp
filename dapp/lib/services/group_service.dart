@@ -39,31 +39,36 @@ class GroupService {
       String contractAddress, List<String> groupNames) async {
     List<GroupProfile> groupProfiles = [];
     for (String groupName in groupNames) {
-      final group = await fetchGroupProfile(contractAddress, groupName);
-      String groupSize = group[0].toString();
-      String groupDeposit = group[1].toString();
-      String groupID = generateUniqueID(groupName, contractAddress);
-      groupProfiles.add(GroupProfile(
+      final GroupProfile groupProfile =
+          await fetchGroupProfile(contractAddress, groupName);
+
+      groupProfiles.add(groupProfile);
+    }
+    return groupProfiles;
+  }
+
+  Future<GroupProfile> fetchGroupProfile(
+      String contractAddress, String groupName) async {
+    DeployedContract contract =
+        await _ethereumService.loadEscrowContract(contractAddress);
+
+    final group = await _ethereumService.query(contract,
+        EscrowFunctions.getGroupDetails.functionName, [groupName], true);
+    String groupSize = group[0].toString();
+    String groupDeposit = group[1].toString();
+    String groupID = generateUniqueID(groupName, contractAddress);
+    List<String> memberAddresses = (group[2] as List<dynamic>)
+        .map((address) => address.toString())
+        .toList();
+
+    return GroupProfile(
         groupID: groupID,
         groupName: groupName,
         contractAddress: contractAddress,
         deposit: groupDeposit,
         groupImagePath: 'assets/default_avatar.jpg',
         membersCount: groupSize,
-      ));
-    }
-    return groupProfiles;
-  }
-
-  Future<List<dynamic>> fetchGroupProfile(
-      String contractAddress, String groupName) async {
-    DeployedContract contract =
-        await _ethereumService.loadEscrowContract(contractAddress);
-    return _ethereumService.query(
-        contract,
-        EscrowFunctions.getGroupSizeAndMemberDeposit.functionName,
-        [groupName],
-        true);
+        memberAddresses: memberAddresses);
   }
 
   Future<List<String>> fetchGroupNames(String contractAddress) async {

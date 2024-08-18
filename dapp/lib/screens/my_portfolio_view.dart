@@ -24,28 +24,32 @@ class _MyPortfolioViewState extends State<MyPortfolioView> {
         contractAddress: 'test1',
         deposit: '100.00',
         groupImagePath: 'assets/dog.jpg',
-        membersCount: '3'),
+        membersCount: '3',
+        memberAddresses: []),
     GroupProfile(
         groupID: 'test2',
         groupName: 'Cat Lovers',
         contractAddress: 'test2',
         deposit: '310.12',
         groupImagePath: 'assets/cat.jpg',
-        membersCount: '2'),
+        membersCount: '2',
+        memberAddresses: []),
     GroupProfile(
         groupID: 'test3',
         groupName: 'Bird Loverssssssssssssssssssss',
         contractAddress: 'test3',
         deposit: '3154.11',
         groupImagePath: 'assets/bird.jpg',
-        membersCount: '5'),
+        membersCount: '5',
+        memberAddresses: []),
     GroupProfile(
         groupID: 'test4',
         groupName: 'Flower Lovers',
         contractAddress: 'test4',
         deposit: '16804.37',
         groupImagePath: 'assets/flower.jpg',
-        membersCount: '2')
+        membersCount: '2',
+        memberAddresses: [])
   ];
 
   final List<UserTransaction> userTransactions = [

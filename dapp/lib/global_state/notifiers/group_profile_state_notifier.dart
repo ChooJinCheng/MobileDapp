@@ -99,18 +99,8 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
 
   Future<void> _fetchAndUpdateGroup(
       String groupName, String memberContractAddress) async {
-    final group =
+    final GroupProfile groupProfile =
         await groupService.fetchGroupProfile(memberContractAddress, groupName);
-    String groupSize = group[0].toString();
-    String groupDeposit = group[1].toString();
-    String groupID =
-        groupService.generateUniqueID(groupName, memberContractAddress);
-    updateGroup(GroupProfile(
-        groupID: groupID,
-        groupName: groupName,
-        contractAddress: memberContractAddress,
-        deposit: groupDeposit,
-        groupImagePath: 'assets/default_avatar.jpg',
-        membersCount: groupSize));
+    updateGroup(groupProfile);
   }
 }

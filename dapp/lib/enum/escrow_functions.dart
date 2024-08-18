@@ -9,7 +9,7 @@ enum EscrowFunctions {
   addMemberToGroup,
   removeMemberFromGroup,
   getAllMemberGroupNames,
-  getGroupSizeAndMemberDeposit,
+  getGroupDetails,
   getGroupMembers,
   getGroupMemberBalance
 }
@@ -37,8 +37,8 @@ extension EscrowFunctionsExtension on EscrowFunctions {
         return 'removeMemberFromGroup';
       case EscrowFunctions.getAllMemberGroupNames:
         return 'getAllMemberGroupNames';
-      case EscrowFunctions.getGroupSizeAndMemberDeposit:
-        return 'getGroupSizeAndMemberDeposit';
+      case EscrowFunctions.getGroupDetails:
+        return 'getGroupDetails';
       case EscrowFunctions.getGroupMembers:
         return 'getGroupMembers';
       case EscrowFunctions.getGroupMemberBalance:

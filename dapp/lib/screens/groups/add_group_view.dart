@@ -50,8 +50,8 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
   }
 
   String? _validateSelectedAddresses(List<String>? value) {
-    if (value == null || value.length < 2) {
-      return 'Please select at least 2 choices';
+    if (value == null || value.isEmpty) {
+      return 'Please select at least 1 member';
     }
     return null;
   }
@@ -78,15 +78,16 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
           IconButton(
             onPressed: () {
               if (_formKey.currentState!.validate()) {
-                List<dynamic> args = [];
-                String groupName = _groupNameController.text;
-                List<EthereumAddress> members = _selectedMembers
-                    .map((name) =>
-                        EthereumAddress.fromHex(_memberAddresses[name]!))
-                    .toList();
-                args.add(groupName);
-                args.add(members);
                 try {
+                  List<dynamic> args = [];
+                  String groupName = _groupNameController.text;
+                  List<EthereumAddress> members = _selectedMembers
+                      .map((name) =>
+                          EthereumAddress.fromHex(_memberAddresses[name]!))
+                      .toList();
+                  members.add(groupService.userAddress);
+                  args.add(groupName);
+                  args.add(members);
                   groupService.addNewGroup(args);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Group Added Successfully')),
