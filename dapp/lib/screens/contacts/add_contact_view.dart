@@ -30,6 +30,8 @@ class _AddContactViewState extends State<AddContactView> {
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter a name';
+    } else if (!isAlphanumeric(value)) {
+      return 'Please enter only alphanumeric characters';
     }
     return null;
   }

@@ -2,9 +2,9 @@ import 'package:dapp/global_state/providers/group_service_provider.dart';
 import 'package:dapp/widgets/member_multi_choice_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:choice/choice.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:validators/validators.dart';
 import 'package:web3dart/web3dart.dart';
 
 class AddGroupView extends ConsumerStatefulWidget {
@@ -46,6 +46,8 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
   String? _validateGroupName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your group name';
+    } else if (!isAlphanumeric(value)) {
+      return 'Please enter only alphanumeric characters';
     }
     return null;
   }
