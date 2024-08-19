@@ -88,7 +88,10 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
                       .map((name) => EthereumAddress.fromHex(
                           _memberNameToAddresses[name]!))
                       .toList();
-                  members.add(groupService.userAddress);
+                  if (!_selectedMembers
+                      .contains(groupService.userAddress.toString())) {
+                    members.add(groupService.userAddress);
+                  }
                   args.add(groupName);
                   args.add(members);
                   groupService.addNewGroup(args);

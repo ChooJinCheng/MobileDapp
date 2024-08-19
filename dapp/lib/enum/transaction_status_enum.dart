@@ -4,7 +4,7 @@ enum TransactionStatus {
   approved,
 }
 
-extension EscrowEventsExtension on TransactionStatus {
+extension TransactionStatusExtension on TransactionStatus {
   int get value {
     switch (this) {
       case TransactionStatus.pending:
@@ -28,6 +28,19 @@ extension EscrowEventsExtension on TransactionStatus {
         return 'Approved';
       default:
         throw ArgumentError('Invalid function');
+    }
+  }
+
+  static TransactionStatus fromInt(int value) {
+    switch (value) {
+      case 0:
+        return TransactionStatus.pending;
+      case 1:
+        return TransactionStatus.declined;
+      case 2:
+        return TransactionStatus.approved;
+      default:
+        throw ArgumentError('Invalid integer value for TransactionStatus');
     }
   }
 }
