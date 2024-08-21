@@ -141,15 +141,39 @@
         "inputs": [
             {
                 "indexed": true,
-                "internalType": "address",
-                "name": "approver",
-                "type": "address"
+                "internalType": "string",
+                "name": "groupName",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "day",
+                "type": "uint8"
             },
             {
                 "indexed": true,
+                "internalType": "uint8",
+                "name": "month",
+                "type": "uint8"
+            },
+            {
+                "indexed": true,
+                "internalType": "uint16",
+                "name": "year",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
                 "internalType": "uint256",
                 "name": "transactionId",
                 "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "approver",
+                "type": "address"
             }
         ],
         "name": "TransactionApproved",
@@ -160,15 +184,39 @@
         "inputs": [
             {
                 "indexed": true,
-                "internalType": "address",
-                "name": "decliner",
-                "type": "address"
+                "internalType": "string",
+                "name": "groupName",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "day",
+                "type": "uint8"
             },
             {
                 "indexed": true,
+                "internalType": "uint8",
+                "name": "month",
+                "type": "uint8"
+            },
+            {
+                "indexed": true,
+                "internalType": "uint16",
+                "name": "year",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
                 "internalType": "uint256",
                 "name": "transactionId",
                 "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum TxnStatus",
+                "name": "txnStatus",
+                "type": "uint8"
             }
         ],
         "name": "TransactionDeclined",
@@ -179,9 +227,39 @@
         "inputs": [
             {
                 "indexed": true,
+                "internalType": "string",
+                "name": "groupName",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "day",
+                "type": "uint8"
+            },
+            {
+                "indexed": true,
+                "internalType": "uint8",
+                "name": "month",
+                "type": "uint8"
+            },
+            {
+                "indexed": true,
+                "internalType": "uint16",
+                "name": "year",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
                 "internalType": "uint256",
                 "name": "transactionId",
                 "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum TxnStatus",
+                "name": "txnStatus",
+                "type": "uint8"
             }
         ],
         "name": "TransactionExecuted",
@@ -192,26 +270,80 @@
         "inputs": [
             {
                 "indexed": true,
-                "internalType": "address",
-                "name": "payer",
-                "type": "address"
+                "internalType": "string",
+                "name": "groupName",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "day",
+                "type": "uint8"
             },
             {
                 "indexed": true,
+                "internalType": "uint8",
+                "name": "month",
+                "type": "uint8"
+            },
+            {
+                "indexed": true,
+                "internalType": "uint16",
+                "name": "year",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum TxnStatus",
+                "name": "txnStatus",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
                 "internalType": "uint256",
-                "name": "transactionId",
+                "name": "transactionID",
                 "type": "uint256"
             },
             {
-                "indexed": true,
+                "indexed": false,
+                "internalType": "address",
+                "name": "initiator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "payee",
+                "type": "address"
+            },
+            {
+                "indexed": false,
                 "internalType": "address[]",
-                "name": "to",
+                "name": "payers",
                 "type": "address[]"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "txnName",
+                "type": "string"
             },
             {
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "value",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum TxnCategory",
+                "name": "txnCategory",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "requiredApprovals",
                 "type": "uint256"
             }
         ],
@@ -444,33 +576,53 @@
         "outputs": [
             {
                 "internalType": "address",
-                "name": "payer",
+                "name": "",
                 "type": "address"
             },
             {
                 "internalType": "address[]",
-                "name": "txnParties",
+                "name": "",
                 "type": "address[]"
             },
             {
                 "internalType": "uint256",
-                "name": "value",
+                "name": "",
                 "type": "uint256"
             },
             {
                 "internalType": "enum TxnStatus",
-                "name": "txnStatus",
+                "name": "",
+                "type": "uint8"
+            },
+            {
+                "internalType": "enum TxnCategory",
+                "name": "",
                 "type": "uint8"
             },
             {
                 "internalType": "uint256",
-                "name": "numApprovals",
+                "name": "",
                 "type": "uint256"
             },
             {
                 "internalType": "uint256",
-                "name": "requiredApprovals",
+                "name": "",
                 "type": "uint256"
+            },
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            },
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            },
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
             }
         ],
         "stateMutability": "view",
@@ -495,12 +647,12 @@
             },
             {
                 "internalType": "address",
-                "name": "_payer",
+                "name": "_payee",
                 "type": "address"
             },
             {
                 "internalType": "address[]",
-                "name": "_txnParties",
+                "name": "_payers",
                 "type": "address[]"
             },
             {
@@ -597,7 +749,7 @@
             },
             {
                 "internalType": "address",
-                "name": "payer",
+                "name": "payee",
                 "type": "address"
             },
             {

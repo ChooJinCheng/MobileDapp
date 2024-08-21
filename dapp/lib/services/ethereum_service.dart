@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dapp/enum/escrow_events.dart';
 import 'package:http/http.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:web3dart/crypto.dart';
 import 'package:web3dart/json_rpc.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:dapp/services/ethereum_abi_loader.dart';
@@ -40,6 +42,8 @@ class EthereumService {
         EscrowFactoryFunctions.getEscrow.functionName, [], true);
     String address = response[0].toString();
 
+    _initializeContacts(_credentials.address.toString());
+
     if (address != '0x0000000000000000000000000000000000000000') {
       escrowContract = await _instance.loadEscrowContract(address);
       print('Escrow Contract is already deployed at: $address');
@@ -50,6 +54,16 @@ class EthereumService {
       escrowContract =
           await _instance.loadEscrowContract(address[0].toString());
       print('Newly deployed escrow at: $address');
+    }
+  }
+
+  void _initializeContacts(String userAddress) async {
+    //TODO:Temporary placed here, need to move else where more appropriate
+    final prefs = await SharedPreferences.getInstance();
+
+    if (!prefs.containsKey(userAddress)) {
+      await prefs.clear();
+      await prefs.setString(userAddress, 'You');
     }
   }
 
@@ -122,9 +136,9 @@ class EthereumService {
       }
 
       /* print('Txn Receipt: $receipt');
-    print('Txn Receipt contract addr: ${receipt.contractAddress}');
-    print('Txn Receipt logs: ${receipt.logs}'); */
-
+      print('Txn Receipt contract addr: ${receipt.contractAddress}');
+      print('Txn Receipt logs: ${receipt.logs}');
+ */
       return result;
     } catch (e) {
       //TODO: Return the error message back to screen
@@ -132,6 +146,7 @@ class EthereumService {
         String errorMessage = e.message;
         print(errorMessage);
       }
+      print('Error in ethService: $e');
     }
   }
 
@@ -147,6 +162,59 @@ class EthereumService {
       params: args,
     );
     return result;
+  }
+
+  Future<List<List<dynamic>>> queryEventLogs(
+      String contractAddress, String eventName, List<dynamic> args) async {
+    DeployedContract deployedContract =
+        await loadEscrowContract(contractAddress);
+    ContractEvent eventInitiated = deployedContract.event(eventName);
+
+    List<List<String?>> topicsList = [
+      [
+        bytesToHex(eventInitiated.signature,
+            padToEvenLength: true, include0x: true)
+      ]
+    ];
+    for (var param in args) {
+      if (param != null) {
+        topicsList.add([_formatTopic(param)]);
+      }
+    }
+
+    FilterOptions filterInitiated = FilterOptions(
+      fromBlock: const BlockNum.genesis(),
+      toBlock: const BlockNum.current(),
+      address: deployedContract.address,
+      topics: topicsList,
+    );
+
+    final logsInitiated = await _client.getLogs(filterInitiated);
+    final decodedLog = logsInitiated.map((log) {
+      final decoded = eventInitiated.decodeResults(log.topics!, log.data!);
+      return decoded;
+    }).toList();
+
+    return decodedLog;
+  }
+
+  String _formatTopic(dynamic value) {
+    if (value is EthereumAddress) {
+      return bytesToHex(value.addressBytes,
+          padToEvenLength: true, include0x: true, forcePadLength: 64);
+    } else if (value is BigInt) {
+      return bytesToHex(intToBytes(value),
+          padToEvenLength: true, include0x: true, forcePadLength: 64);
+    } else if (value is int) {
+      return bytesToHex(intToBytes(BigInt.from(value)),
+          padToEvenLength: true, include0x: true, forcePadLength: 64);
+    } else if (value is String) {
+      final hash = keccakUtf8(value);
+      return bytesToHex(hash,
+          padToEvenLength: true, include0x: true, forcePadLength: 64);
+    } else {
+      throw ArgumentError('Unsupported type for topic');
+    }
   }
 
   Future<StreamSubscription<FilterEvent>> listenToGroupCreatedEvents(

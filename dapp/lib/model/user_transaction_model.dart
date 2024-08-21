@@ -1,29 +1,34 @@
 import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/enum/transaction_status_enum.dart';
+import 'package:web3dart/web3dart.dart';
 
 class UserTransaction {
-  String transactID;
+  DateTime date;
   String groupName;
-  bool transactionType;
-  String date;
-  String transactAmount;
-  TransactionCategory category;
-  String totalAmount;
-  String transactTitle;
+  TransactionStatus transactStatus;
+  String transactID;
   String transactInitiator;
   String transactPayee;
-  TransactionStatus transactStatus;
+  List<EthereumAddress> transactPayers;
+  String transactTitle;
+  String totalAmount;
+  TransactionCategory category;
+  bool transactionType;
+  String transactAmount;
+
 //TODO: Make certain fields into ENUM
-  UserTransaction(
-      {required this.transactID,
-      required this.groupName,
-      required this.transactionType,
-      required this.date,
-      required this.transactAmount,
-      required this.category,
-      required this.totalAmount,
-      required this.transactTitle,
-      required this.transactInitiator,
-      required this.transactPayee,
-      required this.transactStatus});
+  UserTransaction({
+    required this.date,
+    required this.groupName,
+    required this.transactStatus,
+    required this.transactID,
+    required this.transactInitiator,
+    required this.transactPayee,
+    required this.transactPayers,
+    required this.transactTitle,
+    required this.totalAmount,
+    required this.category,
+    required this.transactionType,
+    required this.transactAmount,
+  });
 }

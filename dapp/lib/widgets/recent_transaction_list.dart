@@ -40,7 +40,7 @@ Widget recentTransactionList(
               transactionViewCard(
                   userTransaction.groupName,
                   userTransaction.transactionType,
-                  userTransaction.date,
+                  userTransaction.date.toString(),
                   userTransaction.transactAmount,
                   userTransaction.category))
       ],

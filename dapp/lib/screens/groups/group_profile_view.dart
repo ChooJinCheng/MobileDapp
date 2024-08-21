@@ -1,5 +1,4 @@
-import 'package:dapp/enum/transaction_category_enum.dart';
-import 'package:dapp/enum/transaction_status_enum.dart';
+import 'package:dapp/global_state/providers/transaction_state_provider.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/model/user_transaction_model.dart';
 import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
@@ -34,63 +33,43 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
     'Sep',
     'Oct'
   ];
-
-  final List<UserTransaction> userTransactions = [
-    UserTransaction(
-        transactID: '1',
-        groupName: 'Dog Lovers',
-        transactionType: true,
-        date: '13 August, 10:00AM',
-        transactAmount: '54',
-        category: TransactionCategory.food,
-        totalAmount: '162',
-        transactTitle: 'Japanese Restaurant',
-        transactInitiator: 'You',
-        transactPayee: 'You',
-        transactStatus: TransactionStatus.approved),
-    UserTransaction(
-        transactID: '2',
-        groupName: 'Cat Lovers',
-        transactionType: false,
-        date: '12 August, 11:00PM',
-        transactAmount: '25',
-        category: TransactionCategory.transport,
-        totalAmount: '75',
-        transactTitle: 'Grab from Jurong West to Tampines',
-        transactInitiator: 'Mary',
-        transactPayee: 'Mary',
-        transactStatus: TransactionStatus.approved),
-    UserTransaction(
-        transactID: '3',
-        groupName: 'Bird Lovers',
-        transactionType: false,
-        date: '09 August, 09:00AM',
-        transactAmount: '65',
-        category: TransactionCategory.activity,
-        totalAmount: '195',
-        transactTitle: 'Bird Sight Equipment Rental',
-        transactInitiator: 'Mary',
-        transactPayee: 'John',
-        transactStatus: TransactionStatus.approved),
-    UserTransaction(
-        transactID: '4',
-        groupName: 'Flower Lovers',
-        transactionType: true,
-        date: '08 August, 05:00PM',
-        transactAmount: '-',
-        category: TransactionCategory.apparel,
-        totalAmount: '162',
-        transactTitle: 'Uniqlo flower series',
-        transactInitiator: 'Mary',
-        transactPayee: 'You',
-        transactStatus: TransactionStatus.declined),
-  ];
   String filterValue = 'All';
 
   @override
+  void initState() {
+    GroupProfile? groupProfile =
+        ref.read(groupProfileStateProvider)[widget.groupID];
+
+    if (groupProfile != null) {
+      final transactionStateNotifier =
+          ref.read(transactionStateProvider.notifier);
+      if (transactionStateNotifier.isEmpty) {
+        transactionStateNotifier.loadGroupTransactions(groupProfile.groupID,
+            groupProfile.groupName, groupProfile.contractAddress);
+      }
+    }
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    GroupProfile groupProfile =
-        ref.watch(groupProfileStateProvider)[widget.groupID]!;
+    List<String> status = ['pendingStatus', 'otherStatus'];
+
+    GroupProfile? groupProfile =
+        ref.watch(groupProfileStateProvider)[widget.groupID];
+    if (groupProfile == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    Map<String, List<UserTransaction>>? statusToTransactions =
+        ref.watch(transactionStateProvider)[groupProfile.groupID];
+    if (statusToTransactions == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    List<UserTransaction> pendingTransactions =
+        statusToTransactions[status[0]] ?? [];
+    List<UserTransaction> pastTransactions =
+        statusToTransactions[status[1]] ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -123,8 +102,8 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                groupProfileCard(groupProfile,
-                    '3'), //TODO: Insert real transaction pending count
+                groupProfileCard(
+                    groupProfile, pendingTransactions.length.toString()),
                 const SizedBox(
                   height: 16.0,
                 ),
@@ -139,7 +118,7 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             ),
           ),
         ),
-        if (userTransactions.isEmpty)
+        if (pendingTransactions.isEmpty)
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             sliver: SliverToBoxAdapter(
@@ -154,10 +133,11 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
         else
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
-            sliver: SliverFixedExtentList(
-                itemExtent: 108.0,
+            sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                    childCount: 3, (context, index) => transactionSlidable())),
+                    childCount: pendingTransactions.length,
+                    (context, index) => TransactionSlidable(
+                        userTransaction: pendingTransactions[index]))),
           ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -231,7 +211,7 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             ),
           ),
         ),
-        if (userTransactions.isEmpty)
+        if (pastTransactions.isEmpty)
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             sliver: SliverToBoxAdapter(
@@ -241,12 +221,11 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
         else
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 100.0),
-            sliver: SliverFixedExtentList(
-                itemExtent: 128.0,
+            sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                    childCount: userTransactions.length,
+                    childCount: pastTransactions.length,
                     (context, index) =>
-                        transactionListCard(userTransactions[index]))),
+                        TransactionListCard(pastTransactions[index]))),
           ),
       ]),
     );

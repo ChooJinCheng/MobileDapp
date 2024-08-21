@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class SelectPayerView extends StatelessWidget {
-  const SelectPayerView({super.key, required this.selectedMembers});
+class SelectPayeeView extends StatelessWidget {
+  const SelectPayeeView({super.key, required this.selectedMembers});
 
   final List<String> selectedMembers;
 
@@ -10,7 +10,7 @@ class SelectPayerView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Select Payer'),
+          title: const Text('Select Payee'),
         ),
         body: ListView.separated(
           separatorBuilder: (BuildContext context, int index) =>

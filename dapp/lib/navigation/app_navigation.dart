@@ -4,7 +4,7 @@ import 'package:dapp/screens/contacts/my_contact_view.dart';
 import 'package:dapp/screens/groups/expense/add_expense_view.dart';
 import 'package:dapp/screens/groups/add_group_view.dart';
 import 'package:dapp/screens/groups/expense/select_category_view.dart';
-import 'package:dapp/screens/groups/expense/select_payer_view.dart';
+import 'package:dapp/screens/groups/expense/select_payee_view.dart';
 import 'package:dapp/screens/groups/expense/select_currency_view.dart';
 import 'package:dapp/screens/groups/expense/select_split_method_view.dart';
 import 'package:dapp/screens/groups/group_profile_view.dart';
@@ -142,14 +142,14 @@ class AppNavigation {
                       ),
                     ),
                     GoRoute(
-                        path: 'selectPayer',
-                        name: 'selectPayer',
+                        path: 'selectPayee',
+                        name: 'selectPayee',
                         pageBuilder: (context, state) {
                           final List<String> selectedMembers =
                               state.extra as List<String>;
                           return CustomTransitionPage<void>(
                             key: state.pageKey,
-                            child: SelectPayerView(
+                            child: SelectPayeeView(
                                 selectedMembers: selectedMembers),
                             transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) =>
