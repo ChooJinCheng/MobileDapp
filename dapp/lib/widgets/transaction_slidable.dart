@@ -1,15 +1,19 @@
 import 'package:dapp/global_state/providers/transaction_service_provider.dart';
 import 'package:dapp/model/user_transaction_model.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class TransactionSlidable extends ConsumerWidget {
   final UserTransaction userTransaction;
+  final String groupContractAddress;
 
-  const TransactionSlidable({super.key, required this.userTransaction});
+  const TransactionSlidable(
+      {super.key,
+      required this.userTransaction,
+      required this.groupContractAddress});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<String?>(
@@ -32,14 +36,45 @@ class TransactionSlidable extends ConsumerWidget {
                   motion: const BehindMotion(),
                   children: [
                     SlidableAction(
-                      onPressed: (context) {},
+                      onPressed: (context) {
+                        try {
+                          List<dynamic> args = [
+                            userTransaction.groupName,
+                            BigInt.from(int.parse(userTransaction.transactID))
+                          ];
+
+                          transactionService.declineTransaction(
+                              groupContractAddress, args);
+                        } catch (e) {
+                          print('Error: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Error encountered. Please try again')));
+                        }
+                      },
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       icon: Icons.close,
                       borderRadius: BorderRadius.circular(16.0),
                     ),
                     SlidableAction(
-                      onPressed: (context) {},
+                      onPressed: (context) {
+                        try {
+                          List<dynamic> args = [
+                            userTransaction.groupName,
+                            BigInt.from(int.parse(userTransaction.transactID))
+                          ];
+                          transactionService.approveTransaction(
+                              groupContractAddress, args);
+                        } catch (e) {
+                          print('Error: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Error encountered. Please try again')));
+                        }
+                      },
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                       icon: Icons.done,
@@ -107,6 +142,6 @@ class TransactionSlidable extends ConsumerWidget {
 }
 
 Future<String?> _getInitiatorName(String address) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString(address);
+  String name = await Utils.getContact(address) ?? address;
+  return name;
 }

@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:dapp/enum/escrow_events.dart';
+import 'package:dapp/enum/transaction_status_enum.dart';
+import 'package:dapp/model/user_transaction_model.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:http/http.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web3dart/crypto.dart';
 import 'package:web3dart/json_rpc.dart';
 import 'package:web3dart/web3dart.dart';
@@ -59,12 +61,7 @@ class EthereumService {
 
   void _initializeContacts(String userAddress) async {
     //TODO:Temporary placed here, need to move else where more appropriate
-    final prefs = await SharedPreferences.getInstance();
-
-    if (!prefs.containsKey(userAddress)) {
-      await prefs.clear();
-      await prefs.setString(userAddress, 'You');
-    }
+    await Utils.initializeContact(userAddress);
   }
 
   EthereumAddress get userAddress => _credentials.address;
@@ -247,6 +244,50 @@ class EthereumService {
           .toList();
       final String memberContractAddress = decoded[2].toString();
       handler(groupName, members, memberContractAddress);
+    });
+  }
+
+  Future<StreamSubscription<FilterEvent>> listenToInitiateTransactionEvents(
+      String contractAddress, Function(List<dynamic>) handler) async {
+    final DeployedContract deployedContract =
+        await loadEscrowContract(contractAddress);
+    return _listenToEvent(
+        EscrowEvents.transactionInitiated.eventName, deployedContract,
+        (List<dynamic> decoded) {
+      handler(decoded);
+    });
+  }
+
+  Future<StreamSubscription<FilterEvent>> listenToApprovedTransactionEvents(
+      String contractAddress, Function(List<dynamic>) handler) async {
+    final DeployedContract deployedContract =
+        await loadEscrowContract(contractAddress);
+    return _listenToEvent(
+        EscrowEvents.transactionApproved.eventName, deployedContract,
+        (List<dynamic> decoded) {
+      handler(decoded);
+    });
+  }
+
+  Future<StreamSubscription<FilterEvent>> listenToDeclinedTransactionEvents(
+      String contractAddress, Function(List<dynamic>) handler) async {
+    final DeployedContract deployedContract =
+        await loadEscrowContract(contractAddress);
+    return _listenToEvent(
+        EscrowEvents.transactionDeclined.eventName, deployedContract,
+        (List<dynamic> decoded) {
+      handler(decoded);
+    });
+  }
+
+  Future<StreamSubscription<FilterEvent>> listenToExecutedTransactionEvents(
+      String contractAddress, Function(List<dynamic>) handler) async {
+    final DeployedContract deployedContract =
+        await loadEscrowContract(contractAddress);
+    return _listenToEvent(
+        EscrowEvents.transactionExecuted.eventName, deployedContract,
+        (List<dynamic> decoded) {
+      handler(decoded);
     });
   }
 

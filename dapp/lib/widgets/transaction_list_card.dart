@@ -1,12 +1,12 @@
 import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/enum/transaction_status_enum.dart';
 import 'package:dapp/model/user_transaction_model.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:dapp/model/constants/categories_mapping.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-Widget TransactionListCard(UserTransaction userTransaction) {
+Widget transactionListCard(UserTransaction userTransaction) {
   return FutureBuilder<String?>(
       future: _getPayeeName(userTransaction.transactPayee),
       builder: (context, snapshot) {
@@ -115,6 +115,6 @@ Color? _transactionColor(bool isCredit, TransactionStatus status) {
 }
 
 Future<String?> _getPayeeName(String address) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString(address);
+  String name = await Utils.getContact(address) ?? address;
+  return name;
 }

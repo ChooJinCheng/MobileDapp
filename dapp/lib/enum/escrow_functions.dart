@@ -3,6 +3,7 @@ enum EscrowFunctions {
   withdrawFromGroup,
   initiateTransaction,
   approveTransaction,
+  declineTransaction,
   getTransaction,
   createGroup,
   disbandGroup,
@@ -25,6 +26,8 @@ extension EscrowFunctionsExtension on EscrowFunctions {
         return 'initiateTransaction';
       case EscrowFunctions.approveTransaction:
         return 'approveTransaction';
+      case EscrowFunctions.declineTransaction:
+        return 'declineTransaction';
       case EscrowFunctions.getTransaction:
         return 'getTransaction';
       case EscrowFunctions.createGroup:

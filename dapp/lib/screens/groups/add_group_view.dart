@@ -1,9 +1,9 @@
 import 'package:dapp/global_state/providers/group_service_provider.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:dapp/widgets/member_multi_choice_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:validators/validators.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -28,12 +28,8 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
   }
 
   Future<void> _loadContactAddresses() async {
-    final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys();
-    Map<String, String> contacts = {};
-    for (String key in keys) {
-      contacts[prefs.getString(key)!] = key;
-    }
+    Map<String, String> contacts = await Utils.getContactsNameToAddress();
+
     setState(() {
       _memberNameToAddresses = contacts;
     });

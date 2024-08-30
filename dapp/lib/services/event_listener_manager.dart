@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dapp/enum/transaction_status_enum.dart';
 import 'package:dapp/services/ethereum_service.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -22,6 +23,38 @@ class EventListenerManager {
         .listenToGroupDisbandedEvents(contractAddress, handler);
     _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
     print('listenToGroupDisbandedEvents listener activated');
+  }
+
+  void listenToInitiateTransactionEvents(
+      String contractAddress, Function(List<dynamic>) handler) async {
+    StreamSubscription<FilterEvent> subscription = await _ethereumService
+        .listenToInitiateTransactionEvents(contractAddress, handler);
+    _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
+    print('listenToInitiateTransactionEvents listener activated');
+  }
+
+  void listenToApprovedTransactionEvents(
+      String contractAddress, Function(List<dynamic>) handler) async {
+    StreamSubscription<FilterEvent> subscription = await _ethereumService
+        .listenToApprovedTransactionEvents(contractAddress, handler);
+    _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
+    print('listenToApprovedTransactionEvents listener activated');
+  }
+
+  void listenToDeclinedTransactionEvents(
+      String contractAddress, Function(List<dynamic>) handler) async {
+    StreamSubscription<FilterEvent> subscription = await _ethereumService
+        .listenToDeclinedTransactionEvents(contractAddress, handler);
+    _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
+    print('listenToDeclinedTransactionEvents listener activated');
+  }
+
+  void listenToExecutedTransactionEvents(
+      String contractAddress, Function(List<dynamic>) handler) async {
+    StreamSubscription<FilterEvent> subscription = await _ethereumService
+        .listenToExecutedTransactionEvents(contractAddress, handler);
+    _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
+    print('listenToExecutedTransactionEvents listener activated');
   }
 
   void listenToEscrowRegisteredEvents(

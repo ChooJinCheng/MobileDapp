@@ -125,7 +125,7 @@
                 "type": "address"
             }
         ],
-        "name": "getMyGroupsEscrow",
+        "name": "getUserEscrowMemberships",
         "outputs": [
             {
                 "internalType": "address[]",

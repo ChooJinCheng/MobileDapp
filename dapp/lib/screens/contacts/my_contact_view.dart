@@ -1,6 +1,6 @@
+import 'package:dapp/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class MyContactView extends StatefulWidget {
   const MyContactView({super.key});
@@ -19,20 +19,14 @@ class _MyContactViewState extends State<MyContactView> {
   }
 
   Future<void> _loadContacts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys();
-    Map<String, String> contacts = {};
-    for (String key in keys) {
-      contacts[key] = prefs.getString(key)!;
-    }
+    Map<String, String> contacts = await Utils.getContactsAddressToName();
     setState(() {
       _contacts = contacts;
     });
   }
 
   Future<void> _deleteContact(String address) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(address);
+    await Utils.deleteContact(address);
     setState(() {
       _contacts.remove(address);
     });

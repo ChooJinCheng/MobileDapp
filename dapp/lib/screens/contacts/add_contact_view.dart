@@ -1,6 +1,6 @@
+import 'package:dapp/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:validators/validators.dart';
 
 class AddContactView extends StatefulWidget {
@@ -23,8 +23,7 @@ class _AddContactViewState extends State<AddContactView> {
   }
 
   Future<void> _saveContact(String name, String address) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString(address, name);
+    await Utils.storeContact(name, address);
   }
 
   String? _validateName(String? value) {

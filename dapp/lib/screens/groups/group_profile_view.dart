@@ -1,3 +1,4 @@
+import 'package:dapp/enum/transaction_grouping_status_enum.dart';
 import 'package:dapp/global_state/providers/transaction_state_provider.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/model/user_transaction_model.dart';
@@ -35,7 +36,7 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
   ];
   String filterValue = 'All';
 
-  @override
+  /* @override
   void initState() {
     GroupProfile? groupProfile =
         ref.read(groupProfileStateProvider)[widget.groupID];
@@ -49,12 +50,27 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
       }
     }
     super.initState();
+  } */
+
+  @override
+  void didChangeDependencies() {
+    GroupProfile? groupProfile =
+        ref.read(groupProfileStateProvider)[widget.groupID];
+    if (groupProfile != null) {
+      final transactionStateNotifier =
+          ref.read(transactionStateProvider.notifier);
+      print('didChangeDependencies triggered');
+      if (!transactionStateNotifier.isExist(widget.groupID)) {
+        print('Load profile triggered');
+        transactionStateNotifier.loadGroupTransactions(groupProfile.groupID,
+            groupProfile.groupName, groupProfile.contractAddress);
+      }
+    }
+    super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
-    List<String> status = ['pendingStatus', 'otherStatus'];
-
     GroupProfile? groupProfile =
         ref.watch(groupProfileStateProvider)[widget.groupID];
     if (groupProfile == null) {
@@ -67,9 +83,10 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
       return const Center(child: CircularProgressIndicator());
     }
     List<UserTransaction> pendingTransactions =
-        statusToTransactions[status[0]] ?? [];
+        statusToTransactions[TransactionGroupingStatus.pendingStatus.name] ??
+            [];
     List<UserTransaction> pastTransactions =
-        statusToTransactions[status[1]] ?? [];
+        statusToTransactions[TransactionGroupingStatus.otherStatus.name] ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -137,7 +154,9 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
                 delegate: SliverChildBuilderDelegate(
                     childCount: pendingTransactions.length,
                     (context, index) => TransactionSlidable(
-                        userTransaction: pendingTransactions[index]))),
+                          userTransaction: pendingTransactions[index],
+                          groupContractAddress: groupProfile.contractAddress,
+                        ))),
           ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -225,7 +244,7 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
                 delegate: SliverChildBuilderDelegate(
                     childCount: pastTransactions.length,
                     (context, index) =>
-                        TransactionListCard(pastTransactions[index]))),
+                        transactionListCard(pastTransactions[index]))),
           ),
       ]),
     );

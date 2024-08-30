@@ -2,12 +2,12 @@ import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/global_state/providers/transaction_service_provider.dart';
 import 'package:dapp/model/constants/categories_mapping.dart';
 import 'package:dapp/model/group_profile_model.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:dapp/widgets/member_multi_choice_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web3dart/web3dart.dart';
 
 class AddExpenseView extends ConsumerStatefulWidget {
@@ -49,15 +49,15 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
   }
 
   Future<void> _loadContactAddresses() async {
-    final prefs = await SharedPreferences.getInstance();
-    Map<String, String> contacts = {};
     List<String> memberNames = [];
     List<String> memberAddresses = widget.groupProfile.memberAddresses;
-    for (String memberAddress in memberAddresses) {
-      String name = (prefs.getString(memberAddress)) ?? memberAddress;
-      contacts[name] = memberAddress;
+    Map<String, String> contacts =
+        await Utils.getMembersContactsNameToAddress(memberAddresses);
+
+    for (String name in contacts.keys) {
       memberNames.add(name);
     }
+
     setState(() {
       _memberNameToAddresses = contacts;
       _groupMemberNames = memberNames;
@@ -78,19 +78,27 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
   String? _validateTitle(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter a title';
-    } else if (!RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(value)) {
+    } else if (!_isAlphanumericWithSpace(value)) {
       return 'Please enter only alphanumeric characters';
     }
     return null;
   }
 
+  bool _isAlphanumericWithSpace(String value) {
+    return RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(value);
+  }
+
   String? _validateAmount(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter an amount';
-    } else if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
+    } else if (!_isNumericWith2Decimal(value)) {
       return 'Please enter only valid numeric value';
     }
     return null;
+  }
+
+  bool _isNumericWith2Decimal(String value) {
+    return RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value);
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -98,7 +106,7 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      lastDate: DateTime.now(),
     );
 
     if (pickedDate != null && pickedDate != _selectedDateTime) {

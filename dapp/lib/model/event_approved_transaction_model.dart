@@ -1,14 +1,14 @@
 import 'package:web3dart/web3dart.dart';
 
 class EventApprovedTransaction {
-  String groupName;
   DateTime date;
+  String groupName;
   String transactID;
   EthereumAddress approver;
 
   EventApprovedTransaction({
-    required this.groupName,
     required this.date,
+    required this.groupName,
     required this.transactID,
     required this.approver,
   });

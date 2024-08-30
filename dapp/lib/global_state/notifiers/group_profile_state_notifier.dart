@@ -1,6 +1,8 @@
+import 'package:dapp/event_bus/event_bus_singleton.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/services/event_listener_manager.dart';
 import 'package:dapp/services/group_service.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web3dart/credentials.dart';
 import 'package:web3dart/web3dart.dart';
@@ -66,8 +68,9 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
     for (EthereumAddress member in members) {
       if (member == groupService.userAddress) {
         String groupID =
-            groupService.generateUniqueID(groupName, memberContractAddress);
+            Utils.generateUniqueID(groupName, memberContractAddress);
         removeGroup(groupID);
+        AppEventBus.instance.fire(GroupDisbandedEvent(groupID));
         break;
       }
     }
@@ -84,6 +87,8 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
       eventListenerManager.listenToGroupDisbandedEvents(
           memberContractAddressStr, _handleGroupDisbanded);
       await _fetchAndUpdateGroup(groupName, memberContractAddressStr);
+      AppEventBus.instance
+          .fire(EscrowRegisteredEvent(memberContractAddressStr));
     }
   }
 

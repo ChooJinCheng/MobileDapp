@@ -1,11 +1,9 @@
-import 'dart:convert';
-
 import 'package:dapp/enum/escrow_factory_functions.dart';
 import 'package:dapp/enum/escrow_functions.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/services/ethereum_service.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:web3dart/web3dart.dart';
-import 'package:web3dart/crypto.dart';
 
 class GroupService {
   final EthereumService _ethereumService;
@@ -56,7 +54,7 @@ class GroupService {
         EscrowFunctions.getGroupDetails.functionName, [groupName], true);
     String groupSize = group[0].toString();
     String groupDeposit = group[1].toString();
-    String groupID = generateUniqueID(groupName, contractAddress);
+    String groupID = Utils.generateUniqueID(groupName, contractAddress);
     List<String> memberAddresses = (group[2] as List<dynamic>)
         .map((address) => address.toString())
         .toList();
@@ -86,14 +84,16 @@ class GroupService {
   }
 
   Future<List<String>> fetchEscrowMembershipAddresses() async {
-    final List<dynamic> myGroupEscrowResponse = await _ethereumService.query(
+    final List<dynamic> response = await _ethereumService.query(
         _ethereumService.escrowFactoryContract,
-        EscrowFactoryFunctions.getMyGroupsEscrow.functionName,
+        EscrowFactoryFunctions.getUserEscrowMemberships.functionName,
         [],
         true);
-    return (myGroupEscrowResponse[0] as List<dynamic>)
+
+    List<String> userEscrowMemberships = (response[0] as List<dynamic>)
         .map((address) => address.toString())
         .toList();
+    return userEscrowMemberships;
   }
 
   void addNewGroup(List<dynamic> args) {
@@ -108,12 +108,5 @@ class GroupService {
     List<dynamic> args = [groupName];
     _ethereumService.callFunction(
         contractAddress, EscrowFunctions.disbandGroup.functionName, args);
-  }
-
-  String generateUniqueID(String groupName, String contractAddress) {
-    final combined = '$groupName$contractAddress';
-    final bytes = utf8.encode(combined);
-    final digest = keccak256(bytes);
-    return bytesToHex(digest, include0x: true);
   }
 }

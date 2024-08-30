@@ -1,6 +1,7 @@
 import 'package:dapp/enum/escrow_events.dart';
 import 'package:dapp/enum/escrow_functions.dart';
 import 'package:dapp/enum/transaction_category_enum.dart';
+import 'package:dapp/enum/transaction_grouping_status_enum.dart';
 import 'package:dapp/enum/transaction_status_enum.dart';
 import 'package:dapp/model/event_approved_transaction_model.dart';
 import 'package:dapp/model/event_declined_transaction_model.dart';
@@ -23,11 +24,23 @@ class TransactionService {
         EscrowFunctions.initiateTransaction.functionName, args);
   }
 
+  Future<void> approveTransaction(
+      String groupContractAddress, List<dynamic> args) async {
+    await _ethereumService.callFunction(groupContractAddress,
+        EscrowFunctions.approveTransaction.functionName, args);
+  }
+
+  Future<void> declineTransaction(
+      String groupContractAddress, List<dynamic> args) async {
+    await _ethereumService.callFunction(groupContractAddress,
+        EscrowFunctions.declineTransaction.functionName, args);
+  }
+
   Future<Map<String, List<UserTransaction>>> fetchGroupTransactions(
       String groupName, String groupContractAddress) async {
     Map<String, List<UserTransaction>> statusToTransactions = {
-      'pendingStatus': [],
-      'otherStatus': []
+      TransactionGroupingStatus.pendingStatus.name: [],
+      TransactionGroupingStatus.otherStatus.name: []
     };
 
     List<UserTransaction> initTransactions = [];
@@ -43,14 +56,14 @@ class TransactionService {
     for (int i = 0; i < range; i++) {
       List<dynamic> args = [groupName, month, year];
       // Retrieve the events
-      declinedTransactions.addAll(await _queryTransactionDeclined(
-          groupName, groupContractAddress, args));
-      approvedTransactions.addAll(await _queryTransactionApproved(
-          groupName, groupContractAddress, args));
-      executedTransactions.addAll(await _queryTransactionExecuted(
-          groupName, groupContractAddress, args));
-      initTransactions.addAll(await _queryTransactionInitiate(
-          groupName, groupContractAddress, args));
+      declinedTransactions
+          .addAll(await _queryTransactionDeclined(groupContractAddress, args));
+      approvedTransactions
+          .addAll(await _queryTransactionApproved(groupContractAddress, args));
+      executedTransactions
+          .addAll(await _queryTransactionExecuted(groupContractAddress, args));
+      initTransactions
+          .addAll(await _queryTransactionInitiate(groupContractAddress, args));
 
       month--;
       if (month < 1) {
@@ -82,7 +95,8 @@ class TransactionService {
 
       if (txn.transactID.isNotEmpty) {
         txn.transactStatus = TransactionStatus.approved;
-        statusToTransactions['otherStatus']!.add(txn);
+        statusToTransactions[TransactionGroupingStatus.otherStatus.name]!
+            .add(txn);
         initTransactions.remove(txn);
       }
     }
@@ -96,7 +110,8 @@ class TransactionService {
 
       if (txn.transactID.isNotEmpty) {
         txn.transactStatus = TransactionStatus.declined;
-        statusToTransactions['otherStatus']!.add(txn);
+        statusToTransactions[TransactionGroupingStatus.otherStatus.name]!
+            .add(txn);
         initTransactions.remove(txn);
       }
     }
@@ -110,9 +125,11 @@ class TransactionService {
               EthereumAddress.fromHex(txn.transactPayee) == userAddress;
 
       if (isUserInvolved || !txn.transactPayers.contains(userAddress)) {
-        statusToTransactions['otherStatus']!.add(txn);
+        statusToTransactions[TransactionGroupingStatus.otherStatus.name]!
+            .add(txn);
       } else {
-        statusToTransactions['pendingStatus']!.add(txn);
+        statusToTransactions[TransactionGroupingStatus.pendingStatus.name]!
+            .add(txn);
       }
     }
 
@@ -122,7 +139,7 @@ class TransactionService {
 
     for (String key in statusToTransactions.keys) {
       List<UserTransaction> txns = statusToTransactions[key]!;
-      print('Key: $key');
+      /* print('Key: $key');
       print('size: ${txns.length}');
       for (var txn in txns) {
         print('Txn: ${txn.groupName}');
@@ -130,111 +147,144 @@ class TransactionService {
         print('date: ${txn.date}');
         print('transactStatus: ${txn.transactStatus}');
         print('-----------------------');
-      }
+      } */
     }
     return statusToTransactions;
   }
 
   Future<List<UserTransaction>> _queryTransactionInitiate(
-      String groupName, String groupContractAddress, List<dynamic> args) async {
+      String groupContractAddress, List<dynamic> args) async {
     final decodedLogs = await _ethereumService.queryEventLogs(
         groupContractAddress,
         EscrowEvents.transactionInitiated.eventName,
         args);
 
     List<UserTransaction> userTransactions = decodedLogs.map((decoded) {
-      int day = (decoded[0] as BigInt).toInt();
-      int month = (decoded[1] as BigInt).toInt();
-      int year = (decoded[2] as BigInt).toInt();
-      TransactionStatus transactionStatus =
-          TransactionStatusExtension.fromInt((decoded[3] as BigInt).toInt());
-      EthereumAddress payee = decoded[6] as EthereumAddress;
-      List<EthereumAddress> payers = (decoded[7] as List<dynamic>)
-          .map((address) => address as EthereumAddress)
-          .toList();
-      BigInt totalAmount = decoded[9] as BigInt;
-      TransactionCategory transactionCategory =
-          TransactionCategoryExtension.fromInt((decoded[10] as BigInt).toInt());
-      EthereumAddress userAddress = _ethereumService.userAddress;
-      bool transactionType = (payee == userAddress) ? true : false;
-      BigInt requiredApproval = (decoded[11] as BigInt) + BigInt.one;
-      double transactAmount = totalAmount / (requiredApproval);
-      return UserTransaction(
-          date: DateTime(year, month, day),
-          groupName: groupName,
-          transactStatus: transactionStatus,
-          transactID: decoded[4].toString(),
-          transactInitiator: decoded[5].toString(),
-          transactPayee: payee.toString(),
-          transactPayers: payers,
-          transactTitle: decoded[8].toString(),
-          totalAmount: totalAmount.toString(),
-          category: transactionCategory,
-          transactionType: transactionType,
-          transactAmount: transactAmount.toStringAsFixed(2));
+      return decodeUserTransaction(decoded);
     }).toList();
 
     return userTransactions;
   }
 
   Future<List<EventApprovedTransaction>> _queryTransactionApproved(
-      String groupName, String groupContractAddress, List<dynamic> args) async {
+      String groupContractAddress, List<dynamic> args) async {
     final decodedLogs = await _ethereumService.queryEventLogs(
         groupContractAddress, EscrowEvents.transactionApproved.eventName, args);
 
     List<EventApprovedTransaction> approvedEvents = decodedLogs.map((decoded) {
-      int day = (decoded[0] as BigInt).toInt();
-      int month = (decoded[1] as BigInt).toInt();
-      int year = (decoded[2] as BigInt).toInt();
-      return EventApprovedTransaction(
-          groupName: groupName,
-          date: DateTime(year, month, day),
-          transactID: decoded[3].toString(),
-          approver: decoded[4] as EthereumAddress);
+      return decodeEventApprovedTransaction(decoded);
     }).toList();
 
     return approvedEvents;
   }
 
   Future<List<EventDeclinedTransaction>> _queryTransactionDeclined(
-      String groupName, String groupContractAddress, List<dynamic> args) async {
+      String groupContractAddress, List<dynamic> args) async {
     final decodedLogs = await _ethereumService.queryEventLogs(
         groupContractAddress, EscrowEvents.transactionDeclined.eventName, args);
 
     List<EventDeclinedTransaction> declinedEvents = decodedLogs.map((decoded) {
-      int day = (decoded[0] as BigInt).toInt();
-      int month = (decoded[1] as BigInt).toInt();
-      int year = (decoded[2] as BigInt).toInt();
-      TransactionStatus transactionStatus =
-          TransactionStatusExtension.fromInt((decoded[4] as BigInt).toInt());
-      return EventDeclinedTransaction(
-          groupName: groupName,
-          date: DateTime(year, month, day),
-          transactID: decoded[3].toString(),
-          transactStatus: transactionStatus);
+      return decodeEventDeclinedTransaction(decoded);
     }).toList();
 
     return declinedEvents;
   }
 
   Future<List<EventExecutedTransaction>> _queryTransactionExecuted(
-      String groupName, String groupContractAddress, List<dynamic> args) async {
+      String groupContractAddress, List<dynamic> args) async {
     final decodedLogs = await _ethereumService.queryEventLogs(
         groupContractAddress, EscrowEvents.transactionExecuted.eventName, args);
 
     List<EventExecutedTransaction> executedEvents = decodedLogs.map((decoded) {
-      int day = (decoded[0] as BigInt).toInt();
-      int month = (decoded[1] as BigInt).toInt();
-      int year = (decoded[2] as BigInt).toInt();
-      TransactionStatus transactionStatus =
-          TransactionStatusExtension.fromInt((decoded[4] as BigInt).toInt());
-      return EventExecutedTransaction(
-          groupName: groupName,
-          date: DateTime(year, month, day),
-          transactID: decoded[3].toString(),
-          transactStatus: transactionStatus);
+      return decodeEventExecutedTransaction(decoded);
     }).toList();
 
     return executedEvents;
+  }
+
+  UserTransaction decodeUserTransaction(List<dynamic> decoded) {
+    int day = (decoded[0] as BigInt).toInt();
+    int month = (decoded[1] as BigInt).toInt();
+    int year = (decoded[2] as BigInt).toInt();
+    String groupName = decoded[3] as String;
+    TransactionStatus transactionStatus =
+        TransactionStatusExtension.fromInt((decoded[4] as BigInt).toInt());
+    String transactionID = decoded[5].toString();
+    String transactionInitiator = decoded[6].toString();
+    EthereumAddress payee = decoded[7] as EthereumAddress;
+    List<EthereumAddress> payers = (decoded[8] as List<dynamic>)
+        .map((address) => address as EthereumAddress)
+        .toList();
+    String transactionTitle = decoded[9].toString();
+    BigInt totalAmount = decoded[10] as BigInt;
+    TransactionCategory transactionCategory =
+        TransactionCategoryExtension.fromInt((decoded[11] as BigInt).toInt());
+    EthereumAddress userAddress = _ethereumService.userAddress;
+    bool transactionType = (payee == userAddress) ? true : false;
+    BigInt requiredApproval = (decoded[12] as BigInt) + BigInt.one;
+    double transactAmount = totalAmount / (requiredApproval);
+
+    return UserTransaction(
+        date: DateTime(year, month, day),
+        groupName: groupName,
+        transactStatus: transactionStatus,
+        transactID: transactionID,
+        transactInitiator: transactionInitiator,
+        transactPayee: payee.toString(),
+        transactPayers: payers,
+        transactTitle: transactionTitle,
+        totalAmount: totalAmount.toString(),
+        category: transactionCategory,
+        transactionType: transactionType,
+        transactAmount: transactAmount.toStringAsFixed(2));
+  }
+
+  EventApprovedTransaction decodeEventApprovedTransaction(
+      List<dynamic> decoded) {
+    int day = (decoded[0] as BigInt).toInt();
+    int month = (decoded[1] as BigInt).toInt();
+    int year = (decoded[2] as BigInt).toInt();
+    String groupName = decoded[3] as String;
+    String transactionID = decoded[4].toString();
+    EthereumAddress approver = decoded[5] as EthereumAddress;
+    return EventApprovedTransaction(
+        date: DateTime(year, month, day),
+        groupName: groupName,
+        transactID: transactionID,
+        approver: approver);
+  }
+
+  EventDeclinedTransaction decodeEventDeclinedTransaction(
+      List<dynamic> decoded) {
+    int day = (decoded[0] as BigInt).toInt();
+    int month = (decoded[1] as BigInt).toInt();
+    int year = (decoded[2] as BigInt).toInt();
+    String groupName = decoded[3] as String;
+    String transactionID = decoded[4].toString();
+    TransactionStatus transactionStatus =
+        TransactionStatusExtension.fromInt((decoded[5] as BigInt).toInt());
+
+    return EventDeclinedTransaction(
+        date: DateTime(year, month, day),
+        groupName: groupName,
+        transactID: transactionID,
+        transactStatus: transactionStatus);
+  }
+
+  EventExecutedTransaction decodeEventExecutedTransaction(
+      List<dynamic> decoded) {
+    int day = (decoded[0] as BigInt).toInt();
+    int month = (decoded[1] as BigInt).toInt();
+    int year = (decoded[2] as BigInt).toInt();
+    String groupName = decoded[3] as String;
+    String transactionID = decoded[4].toString();
+    TransactionStatus transactionStatus =
+        TransactionStatusExtension.fromInt((decoded[5] as BigInt).toInt());
+
+    return EventExecutedTransaction(
+        date: DateTime(year, month, day),
+        groupName: groupName,
+        transactID: transactionID,
+        transactStatus: transactionStatus);
   }
 }
