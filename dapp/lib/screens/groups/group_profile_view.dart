@@ -102,8 +102,8 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                groupProfileCard(
-                    groupProfile, pendingTransactions.length.toString()),
+                groupProfileCard(groupProfile,
+                    pendingTransactions.length.toString(), context),
                 const SizedBox(
                   height: 16.0,
                 ),

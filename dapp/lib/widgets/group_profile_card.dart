@@ -1,9 +1,10 @@
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:flutter/material.dart';
 import 'package:dapp/widgets/build_elevated_button.dart';
+import 'package:go_router/go_router.dart';
 
-Widget groupProfileCard(
-    GroupProfile groupProfile, String pendingTransactionCount) {
+Widget groupProfileCard(GroupProfile groupProfile,
+    String pendingTransactionCount, BuildContext context) {
   return Container(
     padding: const EdgeInsets.all(6),
     decoration: BoxDecoration(
@@ -44,9 +45,12 @@ Widget groupProfileCard(
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            buildElevatedButton('Deposit', Icons.call_made),
-            buildElevatedButton('Withdraw', Icons.call_received),
-            buildElevatedButton('Members', Icons.group),
+            buildElevatedButton('Deposit', Icons.call_made, (context) {}),
+            buildElevatedButton('Withdraw', Icons.call_received, (context) {}),
+            buildElevatedButton('Members', Icons.group, (context) {
+              context.pushNamed<void>('members',
+                  extra: groupProfile.memberAddresses);
+            }),
           ],
         ),
       ],

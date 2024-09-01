@@ -8,6 +8,7 @@ import 'package:dapp/screens/groups/expense/select_payee_view.dart';
 import 'package:dapp/screens/groups/expense/select_currency_view.dart';
 import 'package:dapp/screens/groups/expense/select_split_method_view.dart';
 import 'package:dapp/screens/groups/group_profile_view.dart';
+import 'package:dapp/screens/groups/member_profile_view.dart';
 import 'package:dapp/screens/home_view.dart';
 import 'package:dapp/screens/manage_transaction_view.dart';
 import 'package:dapp/screens/groups/my_group_view.dart';
@@ -15,6 +16,7 @@ import 'package:dapp/screens/my_portfolio_view.dart';
 import 'package:dapp/wrapper/main_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:web3dart/credentials.dart';
 
 class AppNavigation {
   //Declare named constructor
@@ -102,6 +104,22 @@ class AppNavigation {
                             FadeTransition(opacity: animation, child: child),
                       ),
                     ),
+                    GoRoute(
+                        path: 'members',
+                        name: 'members',
+                        pageBuilder: (context, state) {
+                          final List<String> memberAddresses =
+                              state.extra as List<String>;
+                          return CustomTransitionPage<void>(
+                            key: state.pageKey,
+                            child: MemberProfileView(
+                                memberAddresses: memberAddresses),
+                            transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) =>
+                                FadeTransition(
+                                    opacity: animation, child: child),
+                          );
+                        }),
                     GoRoute(
                         path: 'addExpense',
                         name: 'addExpense',

@@ -61,11 +61,9 @@ class _MyContactViewState extends State<MyContactView> {
           ..._contacts.entries.map((entry) {
             return ListTile(
               leading: Text(entry.value,
-                  style: Theme.of(context).textTheme.bodyLarge), // Contact name
-              title: Text(entry.key,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge), // Ethereum address
+                  style: Theme.of(context).textTheme.bodyLarge),
+              title:
+                  Text(entry.key, style: Theme.of(context).textTheme.bodyLarge),
               trailing: IconButton(
                 icon: Icon(
                   Icons.delete,

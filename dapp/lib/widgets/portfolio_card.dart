@@ -37,9 +37,9 @@ Widget portfolioCard() {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            buildElevatedButton('Deposit', Icons.call_made),
-            buildElevatedButton('Withdraw', Icons.call_received),
-            buildElevatedButton('Send', Icons.send),
+            buildElevatedButton('Deposit', Icons.call_made, (context) {}),
+            buildElevatedButton('Withdraw', Icons.call_received, (context) {}),
+            buildElevatedButton('Send', Icons.send, (context) {}),
           ],
         ),
       ],

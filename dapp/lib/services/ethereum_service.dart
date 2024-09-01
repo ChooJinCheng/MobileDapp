@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:dapp/enum/escrow_events.dart';
-import 'package:dapp/enum/transaction_status_enum.dart';
-import 'package:dapp/model/user_transaction_model.dart';
 import 'package:dapp/utils/utils.dart';
 import 'package:http/http.dart';
 import 'package:web3dart/crypto.dart';
