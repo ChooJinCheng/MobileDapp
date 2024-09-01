@@ -65,7 +65,8 @@ class _MyPortfolioViewState extends State<MyPortfolioView> {
         transactInitiator: 'You',
         transactPayee: 'You',
         transactPayers: [],
-        transactStatus: TransactionStatus.approved),
+        transactStatus: TransactionStatus.approved,
+        isInvolved: false),
     UserTransaction(
         transactID: '2',
         groupName: 'Cat Lovers',
@@ -78,7 +79,8 @@ class _MyPortfolioViewState extends State<MyPortfolioView> {
         transactInitiator: 'Mary',
         transactPayee: 'Mary',
         transactPayers: [],
-        transactStatus: TransactionStatus.approved),
+        transactStatus: TransactionStatus.approved,
+        isInvolved: false),
     UserTransaction(
         transactID: '3',
         groupName: 'Bird Lovers',
@@ -91,7 +93,8 @@ class _MyPortfolioViewState extends State<MyPortfolioView> {
         transactInitiator: 'Mary',
         transactPayee: 'John',
         transactPayers: [],
-        transactStatus: TransactionStatus.approved),
+        transactStatus: TransactionStatus.approved,
+        isInvolved: false),
     UserTransaction(
         transactID: '4',
         groupName: 'Flower Lovers',
@@ -104,7 +107,8 @@ class _MyPortfolioViewState extends State<MyPortfolioView> {
         transactInitiator: 'Mary',
         transactPayee: 'You',
         transactPayers: [],
-        transactStatus: TransactionStatus.declined),
+        transactStatus: TransactionStatus.declined,
+        isInvolved: false),
   ];
 
   @override

@@ -11,6 +11,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class GroupProfileView extends ConsumerStatefulWidget {
   final String groupID;
@@ -21,36 +22,14 @@ class GroupProfileView extends ConsumerStatefulWidget {
 }
 
 class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
-  //TODO: Filter will be dynamically populated with existing dates
-  final List<String> filterList = <String>[
-    'All',
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct'
-  ];
+  late List<String> filterList;
   String filterValue = 'All';
 
-  /* @override
+  @override
   void initState() {
-    GroupProfile? groupProfile =
-        ref.read(groupProfileStateProvider)[widget.groupID];
-
-    if (groupProfile != null) {
-      final transactionStateNotifier =
-          ref.read(transactionStateProvider.notifier);
-      if (transactionStateNotifier.isEmpty) {
-        transactionStateNotifier.loadGroupTransactions(groupProfile.groupID,
-            groupProfile.groupName, groupProfile.contractAddress);
-      }
-    }
+    filterList = _generateFilterList();
     super.initState();
-  } */
+  }
 
   @override
   void didChangeDependencies() {
@@ -87,6 +66,10 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             [];
     List<UserTransaction> pastTransactions =
         statusToTransactions[TransactionGroupingStatus.otherStatus.name] ?? [];
+
+    List<UserTransaction> filteredPastTransactions = (filterValue == 'All')
+        ? pastTransactions
+        : _filterTransactions(pastTransactions, filterValue);
 
     return Scaffold(
       appBar: AppBar(
@@ -190,6 +173,8 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
                   onChanged: (value) {
                     setState(() {
                       filterValue = value!;
+                      filteredPastTransactions =
+                          _filterTransactions(pastTransactions, filterValue);
                     });
                   },
                   buttonStyleData: ButtonStyleData(
@@ -230,7 +215,7 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             ),
           ),
         ),
-        if (pastTransactions.isEmpty)
+        if (filteredPastTransactions.isEmpty)
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             sliver: SliverToBoxAdapter(
@@ -242,11 +227,73 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
             padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 100.0),
             sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                    childCount: pastTransactions.length,
+                    childCount: filteredPastTransactions.length,
                     (context, index) =>
-                        transactionListCard(pastTransactions[index]))),
+                        transactionListCard(filteredPastTransactions[index]))),
           ),
       ]),
     );
   }
+}
+
+List<String> _generateFilterList() {
+  final now = DateTime.now();
+  final formatter = DateFormat('MMM');
+  final months = <String>[];
+
+  for (int i = 2; i >= 0; i--) {
+    final date = DateTime(now.year, now.month - i);
+
+    if (date.month < 1) {
+      final newYear = now.year - 1;
+      final newMonth = date.month + 12;
+      months.add(formatter.format(DateTime(newYear, newMonth)));
+    } else {
+      months.add(formatter.format(date));
+    }
+  }
+
+  months.add('All');
+  months.sort(
+      (a, b) => months.indexOf(a) - months.indexOf(b)); // Ensure 'All' is last
+
+  return months;
+}
+
+List<UserTransaction> _filterTransactions(
+    List<UserTransaction> transactions, String filterValue) {
+  if (transactions.isEmpty) return [];
+  final now = DateTime.now();
+  final filterDate = filterValue == 'All'
+      ? null
+      : DateTime(now.year, _getMonthIndex(filterValue));
+
+  return transactions.where((transaction) {
+    final transactionDate = transaction.date;
+    if (filterDate == null) return true;
+    if (transactionDate.year == filterDate.year) {
+      return transactionDate.month == filterDate.month;
+    } else if (transactionDate.year == filterDate.year - 1) {
+      return transactionDate.month == filterDate.month;
+    }
+    return false;
+  }).toList();
+}
+
+int _getMonthIndex(String month) {
+  final months = {
+    'Jan': 1,
+    'Feb': 2,
+    'Mar': 3,
+    'Apr': 4,
+    'May': 5,
+    'Jun': 6,
+    'Jul': 7,
+    'Aug': 8,
+    'Sep': 9,
+    'Oct': 10,
+    'Nov': 11,
+    'Dec': 12,
+  };
+  return months[month] ?? DateTime.now().month;
 }

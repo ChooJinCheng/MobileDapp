@@ -15,6 +15,7 @@ class UserTransaction {
   TransactionCategory category;
   bool transactionType;
   String transactAmount;
+  bool isInvolved;
 
 //TODO: Make certain fields into ENUM
   UserTransaction({
@@ -30,5 +31,6 @@ class UserTransaction {
     required this.category,
     required this.transactionType,
     required this.transactAmount,
+    required this.isInvolved,
   });
 }

@@ -1,3 +1,4 @@
+import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/enum/transaction_grouping_status_enum.dart';
 import 'package:dapp/enum/transaction_status_enum.dart';
 import 'package:dapp/event_bus/event_bus_singleton.dart';
@@ -78,20 +79,27 @@ class TransactionNotifier
         transaction.groupName, memberContractAddress.toString());
     if (!state.containsKey(groupID)) return;
 
-    _addTransactionToPending(groupID, transaction);
+    _addTransaction(groupID, transaction);
   }
 
-  void _addTransactionToPending(String groupID, UserTransaction transaction) {
+  void _addTransaction(String groupID, UserTransaction transaction) {
     Map<String, List<UserTransaction>> currentGroupState =
         Map<String, List<UserTransaction>>.from(state[groupID]!);
+    EthereumAddress currentUserAddress = transactionService.userAddress;
 
     List<UserTransaction> pendingTransactions = List<UserTransaction>.from(
         currentGroupState[TransactionGroupingStatus.pendingStatus.name]!);
-    pendingTransactions.add(transaction);
-    pendingTransactions.sort((a, b) => b.date.compareTo(a.date));
 
     List<UserTransaction> otherTransactions = List<UserTransaction>.from(
         currentGroupState[TransactionGroupingStatus.otherStatus.name]!);
+
+    if (transaction.transactPayers.contains(currentUserAddress)) {
+      pendingTransactions.add(transaction);
+      pendingTransactions.sort((a, b) => b.date.compareTo(a.date));
+    } else {
+      otherTransactions.add(transaction);
+      otherTransactions.sort((a, b) => b.date.compareTo(a.date));
+    }
 
     final newState =
         Map<String, Map<String, List<UserTransaction>>>.from(state);
@@ -113,7 +121,7 @@ class TransactionNotifier
         eventApproved.groupName, memberContractAddress.toString());
     if (!state.containsKey(groupID)) return;
 
-    _moveTransaction(
+    _updateTransaction(
         groupID, eventApproved.transactID, TransactionStatus.pending);
   }
 
@@ -127,7 +135,7 @@ class TransactionNotifier
         eventDeclined.groupName, memberContractAddress.toString());
     if (!state.containsKey(groupID)) return;
 
-    _moveTransaction(
+    _updateTransaction(
         groupID, eventDeclined.transactID, TransactionStatus.declined);
   }
 
@@ -141,28 +149,59 @@ class TransactionNotifier
         eventExecuted.groupName, memberContractAddress.toString());
     if (!state.containsKey(groupID)) return;
 
-    _moveTransaction(
+    _updateTransaction(
         groupID, eventExecuted.transactID, TransactionStatus.approved);
   }
 
-  void _moveTransaction(
+  void _updateTransaction(
       String groupID, String transactID, TransactionStatus newStatus) {
     Map<String, List<UserTransaction>> currentGroupState =
-        Map<String, List<UserTransaction>>.from(state[groupID]!);
+        Map<String, List<UserTransaction>>.from(state[groupID] ?? {});
+
+    if (currentGroupState.isEmpty) return;
+
+    UserTransaction dummyTransaction = UserTransaction(
+      date: DateTime(1970, 1, 1),
+      groupName: '',
+      transactStatus: TransactionStatus.pending,
+      transactID: '',
+      transactInitiator: '',
+      transactPayee: '',
+      transactPayers: [],
+      transactTitle: '',
+      totalAmount: '',
+      category: TransactionCategory.activity,
+      transactionType: false,
+      transactAmount: '',
+      isInvolved: false,
+    );
 
     List<UserTransaction> pendingTransactions = List<UserTransaction>.from(
-        currentGroupState[TransactionGroupingStatus.pendingStatus.name]!);
-
-    UserTransaction transaction = pendingTransactions
-        .singleWhere((transaction) => transaction.transactID == transactID);
-    pendingTransactions.remove(transaction);
+        currentGroupState[TransactionGroupingStatus.pendingStatus.name] ?? []);
 
     List<UserTransaction> otherTransactions = List<UserTransaction>.from(
-        currentGroupState[TransactionGroupingStatus.otherStatus.name]!);
+        currentGroupState[TransactionGroupingStatus.otherStatus.name] ?? []);
 
-    transaction.transactStatus = newStatus;
-    otherTransactions.add(transaction);
-    otherTransactions.sort((a, b) => b.date.compareTo(a.date));
+    if (pendingTransactions.isEmpty && otherTransactions.isEmpty) return;
+
+    UserTransaction? transaction = pendingTransactions.firstWhere(
+      (transaction) => transaction.transactID == transactID,
+      orElse: () => dummyTransaction,
+    );
+
+    if (transaction.transactID.isNotEmpty) {
+      pendingTransactions.remove(transaction);
+
+      transaction.transactStatus = newStatus;
+      otherTransactions.add(transaction);
+      otherTransactions.sort((a, b) => b.date.compareTo(a.date));
+    } else {
+      transaction = otherTransactions.firstWhere(
+        (transaction) => transaction.transactID == transactID,
+        orElse: () => dummyTransaction,
+      );
+      transaction.transactStatus = newStatus;
+    }
 
     final newState =
         Map<String, Map<String, List<UserTransaction>>>.from(state);

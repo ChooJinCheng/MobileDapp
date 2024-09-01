@@ -17,10 +17,13 @@ Widget transactionListCard(UserTransaction userTransaction) {
         final String transactAmount = _formattedAmount(
             userTransaction.transactAmount,
             userTransaction.transactionType,
-            userTransaction.transactStatus);
+            userTransaction.transactStatus,
+            userTransaction.isInvolved);
         final Color? statusColor = _statusColor(userTransaction.transactStatus);
         final Color? transactionColor = _transactionColor(
-            userTransaction.transactionType, userTransaction.transactStatus);
+            userTransaction.transactionType,
+            userTransaction.transactStatus,
+            userTransaction.isInvolved);
 
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasData) {
@@ -98,8 +101,8 @@ Widget transactionListCard(UserTransaction userTransaction) {
 }
 
 String _formattedAmount(
-    String amount, bool isCredit, TransactionStatus status) {
-  if (status == TransactionStatus.declined) return '--';
+    String amount, bool isCredit, TransactionStatus status, bool isInvolved) {
+  if (status == TransactionStatus.declined || !isInvolved) return '--';
   return isCredit ? '+\$$amount' : '-\$$amount';
 }
 
@@ -109,8 +112,12 @@ Color? _statusColor(TransactionStatus status) {
       : Colors.green[700];
 }
 
-Color? _transactionColor(bool isCredit, TransactionStatus status) {
-  if (status == TransactionStatus.declined) return Colors.black54;
+Color? _transactionColor(
+    bool isCredit, TransactionStatus status, bool isInvolved) {
+  if (status == TransactionStatus.declined || !isInvolved) {
+    return Colors.black54;
+  }
+
   return isCredit ? Colors.green[700] : Colors.redAccent[700];
 }
 

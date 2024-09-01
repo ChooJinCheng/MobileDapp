@@ -55,7 +55,7 @@ class TransactionService {
 
     for (int i = 0; i < range; i++) {
       List<dynamic> args = [groupName, month, year];
-      // Retrieve the events
+
       declinedTransactions
           .addAll(await _queryTransactionDeclined(groupContractAddress, args));
       approvedTransactions
@@ -85,6 +85,7 @@ class TransactionService {
       category: TransactionCategory.activity,
       transactionType: false,
       transactAmount: '',
+      isInvolved: false,
     );
 
     for (EventExecutedTransaction executedTxn in executedTransactions) {
@@ -117,7 +118,7 @@ class TransactionService {
     }
 
     for (UserTransaction txn in initTransactions) {
-      var approved = approvedTransactions
+      Iterable<EventApprovedTransaction> approved = approvedTransactions
           .where((approvedTxn) => approvedTxn.transactID == txn.transactID);
 
       bool isUserInvolved =
@@ -137,18 +138,6 @@ class TransactionService {
       statusToTransactions[key]!.sort((a, b) => b.date.compareTo(a.date));
     }
 
-    for (String key in statusToTransactions.keys) {
-      List<UserTransaction> txns = statusToTransactions[key]!;
-      /* print('Key: $key');
-      print('size: ${txns.length}');
-      for (var txn in txns) {
-        print('Txn: ${txn.groupName}');
-        print('TxnID: ${txn.transactID}');
-        print('date: ${txn.date}');
-        print('transactStatus: ${txn.transactStatus}');
-        print('-----------------------');
-      } */
-    }
     return statusToTransactions;
   }
 
@@ -221,8 +210,9 @@ class TransactionService {
         TransactionCategoryExtension.fromInt((decoded[11] as BigInt).toInt());
     EthereumAddress userAddress = _ethereumService.userAddress;
     bool transactionType = (payee == userAddress) ? true : false;
-    BigInt requiredApproval = (decoded[12] as BigInt) + BigInt.one;
-    double transactAmount = totalAmount / (requiredApproval);
+    BigInt requiredApproval = (decoded[12] as BigInt);
+    bool isInvolved = _isInvolvedInTransaction(payee, payers);
+    double transactAmount = totalAmount / requiredApproval;
 
     return UserTransaction(
         date: DateTime(year, month, day),
@@ -236,7 +226,17 @@ class TransactionService {
         totalAmount: totalAmount.toString(),
         category: transactionCategory,
         transactionType: transactionType,
-        transactAmount: transactAmount.toStringAsFixed(2));
+        transactAmount: transactAmount.toStringAsFixed(2),
+        isInvolved: isInvolved);
+  }
+
+  bool _isInvolvedInTransaction(
+      EthereumAddress payee, List<EthereumAddress> payers) {
+    if (payee == userAddress || payers.contains(userAddress)) {
+      return true;
+    }
+
+    return false;
   }
 
   EventApprovedTransaction decodeEventApprovedTransaction(
