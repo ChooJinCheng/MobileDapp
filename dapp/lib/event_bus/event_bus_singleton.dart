@@ -1,5 +1,4 @@
 import 'package:event_bus/event_bus.dart';
-import 'package:web3dart/web3dart.dart';
 
 class AppEventBus {
   AppEventBus._internal();

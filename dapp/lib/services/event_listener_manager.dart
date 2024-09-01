@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:dapp/enum/transaction_status_enum.dart';
 import 'package:dapp/services/ethereum_service.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -89,7 +88,7 @@ class EventListenerManager {
         }
       }
       _listeners.remove(contractAddress);
+      print('$contractAddress listener deactivated');
     }
-    print('$contractAddress listener deactivated');
   }
 }
