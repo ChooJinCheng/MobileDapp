@@ -94,7 +94,7 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
     if (value == null || value.isEmpty) {
       return 'Please enter an amount';
     } else if (!_isNumericWith2Decimal(value)) {
-      return 'Please enter a numeric value 2 decimal point';
+      return 'Please enter a numeric value with 2 decimal point';
     }
     return null;
   }

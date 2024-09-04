@@ -1,6 +1,7 @@
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/screens/contacts/add_contact_view.dart';
 import 'package:dapp/screens/contacts/my_contact_view.dart';
+import 'package:dapp/screens/groups/deposit_group_view.dart';
 import 'package:dapp/screens/groups/expense/add_expense_view.dart';
 import 'package:dapp/screens/groups/add_group_view.dart';
 import 'package:dapp/screens/groups/expense/select_category_view.dart';
@@ -9,6 +10,7 @@ import 'package:dapp/screens/groups/expense/select_currency_view.dart';
 import 'package:dapp/screens/groups/expense/select_split_method_view.dart';
 import 'package:dapp/screens/groups/group_profile_view.dart';
 import 'package:dapp/screens/groups/member_profile_view.dart';
+import 'package:dapp/screens/groups/withdraw_group_view.dart';
 import 'package:dapp/screens/home_view.dart';
 import 'package:dapp/screens/manage_transaction_view.dart';
 import 'package:dapp/screens/groups/my_group_view.dart';
@@ -103,6 +105,37 @@ class AppNavigation {
                             FadeTransition(opacity: animation, child: child),
                       ),
                     ),
+                    GoRoute(
+                        path: 'depositGroup',
+                        name: 'depositGroup',
+                        pageBuilder: (context, state) {
+                          final GroupProfile groupProfile =
+                              state.extra as GroupProfile;
+                          return CustomTransitionPage<void>(
+                            key: state.pageKey,
+                            child: DepositGroupView(groupProfile: groupProfile),
+                            transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) =>
+                                FadeTransition(
+                                    opacity: animation, child: child),
+                          );
+                        }),
+                    GoRoute(
+                        path: 'withdrawGroup',
+                        name: 'withdrawGroup',
+                        pageBuilder: (context, state) {
+                          final GroupProfile groupProfile =
+                              state.extra as GroupProfile;
+                          return CustomTransitionPage<void>(
+                            key: state.pageKey,
+                            child:
+                                WithdrawGroupView(groupProfile: groupProfile),
+                            transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) =>
+                                FadeTransition(
+                                    opacity: animation, child: child),
+                          );
+                        }),
                     GoRoute(
                         path: 'members',
                         name: 'members',

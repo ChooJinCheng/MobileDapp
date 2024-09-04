@@ -36,6 +36,20 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
     state = newState;
   }
 
+  Future<void> depositToGroup(
+      String groupName, String contractAddress, String amount) async {
+    await groupService.depositToGroup(groupName, contractAddress, amount);
+    String groupID = Utils.generateUniqueID(groupName, contractAddress);
+    await _updateGroupMemberBalance(groupID);
+  }
+
+  Future<void> withdrawFromGroup(
+      String groupName, String contractAddress, String amount) async {
+    await groupService.withdrawFromGroup(groupName, contractAddress, amount);
+    String groupID = Utils.generateUniqueID(groupName, contractAddress);
+    await _updateGroupMemberBalance(groupID);
+  }
+
   _listenToGroupEvents() async {
     List<String> escrowAddresses =
         await groupService.fetchEscrowMembershipAddresses();
@@ -54,20 +68,24 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
 
     AppEventBus.instance.on<TransactionExecutedEvent>().listen((event) async {
       String groupID = event.groupID;
-      if (state.containsKey(groupID)) {
-        GroupProfile? group = state[groupID];
-        if (group != null) {
-          String groupDeposit = await groupService.fetchGroupMemberBalance(
-              group.groupName, group.contractAddress);
-          group.deposit = groupDeposit;
-
-          Map<String, GroupProfile> newState =
-              Map<String, GroupProfile>.from(state);
-          newState[groupID] = group;
-          state = newState;
-        }
-      }
+      await _updateGroupMemberBalance(groupID);
     });
+  }
+
+  Future<void> _updateGroupMemberBalance(String groupID) async {
+    if (state.containsKey(groupID)) {
+      GroupProfile? group = state[groupID];
+      if (group != null) {
+        String groupDeposit = await groupService.fetchGroupMemberBalance(
+            group.groupName, group.contractAddress);
+        group.deposit = groupDeposit;
+
+        Map<String, GroupProfile> newState =
+            Map<String, GroupProfile>.from(state);
+        newState[groupID] = group;
+        state = newState;
+      }
+    }
   }
 
   void _handleGroupCreated(String groupName, List<EthereumAddress> members,

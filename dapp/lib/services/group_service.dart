@@ -4,6 +4,7 @@ import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/services/ethereum_service.dart';
 import 'package:dapp/utils/decimal_bigint_converter.dart';
 import 'package:dapp/utils/utils.dart';
+import 'package:decimal/decimal.dart';
 import 'package:web3dart/web3dart.dart';
 
 class GroupService {
@@ -128,5 +129,25 @@ class GroupService {
     List<dynamic> args = [groupName];
     _ethereumService.callFunction(
         contractAddress, EscrowFunctions.disbandGroup.functionName, args);
+  }
+
+  Future<void> depositToGroup(
+      String groupName, String contractAddress, String amount) async {
+    BigInt depositAmount =
+        DecimalBigIntConverter.decimalToBigInt(Decimal.parse(amount));
+    List<dynamic> args = [groupName, depositAmount];
+
+    await _ethereumService.callFunction(
+        contractAddress, EscrowFunctions.depositToGroup.functionName, args);
+  }
+
+  Future<void> withdrawFromGroup(
+      String groupName, String contractAddress, String amount) async {
+    BigInt depositAmount =
+        DecimalBigIntConverter.decimalToBigInt(Decimal.parse(amount));
+    List<dynamic> args = [groupName, depositAmount];
+
+    await _ethereumService.callFunction(
+        contractAddress, EscrowFunctions.withdrawFromGroup.functionName, args);
   }
 }

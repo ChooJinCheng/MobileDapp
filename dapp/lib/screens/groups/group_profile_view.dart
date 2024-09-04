@@ -38,9 +38,7 @@ class _GroupProfileViewState extends ConsumerState<GroupProfileView> {
     if (groupProfile != null) {
       final transactionStateNotifier =
           ref.read(transactionStateProvider.notifier);
-      print('didChangeDependencies triggered');
       if (!transactionStateNotifier.isExist(widget.groupID)) {
-        print('Load profile triggered');
         transactionStateNotifier.loadGroupTransactions(groupProfile.groupID,
             groupProfile.groupName, groupProfile.contractAddress);
       }

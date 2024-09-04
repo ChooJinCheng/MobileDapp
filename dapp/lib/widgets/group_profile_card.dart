@@ -45,8 +45,12 @@ Widget groupProfileCard(GroupProfile groupProfile,
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            buildElevatedButton('Deposit', Icons.call_made, (context) {}),
-            buildElevatedButton('Withdraw', Icons.call_received, (context) {}),
+            buildElevatedButton('Deposit', Icons.call_made, (context) {
+              context.pushNamed<void>('depositGroup', extra: groupProfile);
+            }),
+            buildElevatedButton('Withdraw', Icons.call_received, (context) {
+              context.pushNamed<void>('withdrawGroup', extra: groupProfile);
+            }),
             buildElevatedButton('Members', Icons.group, (context) {
               context.pushNamed<void>('members',
                   extra: groupProfile.memberAddresses);
