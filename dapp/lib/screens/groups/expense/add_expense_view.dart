@@ -2,8 +2,10 @@ import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/global_state/providers/transaction_service_provider.dart';
 import 'package:dapp/model/constants/categories_mapping.dart';
 import 'package:dapp/model/group_profile_model.dart';
+import 'package:dapp/utils/decimal_bigint_converter.dart';
 import 'package:dapp/utils/utils.dart';
 import 'package:dapp/widgets/member_multi_choice_input.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -137,7 +139,9 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
               if (_formKey.currentState!.validate()) {
                 try {
                   String title = _titleController.text;
-                  String amount = _amountController.text;
+                  String amountStr = _amountController.text;
+                  BigInt amount = DecimalBigIntConverter.decimalToBigInt(
+                      Decimal.parse(amountStr));
                   int day = _selectedDateTime!.day;
                   int month = _selectedDateTime!.month;
                   int year = _selectedDateTime!.year;
@@ -153,7 +157,7 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
                     EthereumAddress.fromHex(
                         _memberNameToAddresses[_selectedPayee]!),
                     selectedPayers,
-                    BigInt.from(int.parse(amount)),
+                    amount,
                     BigInt.from(day),
                     BigInt.from(month),
                     BigInt.from(year)

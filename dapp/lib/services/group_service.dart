@@ -2,6 +2,7 @@ import 'package:dapp/enum/escrow_factory_functions.dart';
 import 'package:dapp/enum/escrow_functions.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/services/ethereum_service.dart';
+import 'package:dapp/utils/decimal_bigint_converter.dart';
 import 'package:dapp/utils/utils.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -53,7 +54,9 @@ class GroupService {
     final group = await _ethereumService.query(contract,
         EscrowFunctions.getGroupDetails.functionName, [groupName], true);
     String groupSize = group[0].toString();
-    String groupDeposit = group[1].toString();
+    BigInt groupDeposit = group[1] as BigInt;
+    String groupDepositDecimal =
+        DecimalBigIntConverter.bigIntToDecimal(groupDeposit).toStringAsFixed(2);
     String groupID = Utils.generateUniqueID(groupName, contractAddress);
     List<String> memberAddresses = (group[2] as List<dynamic>)
         .map((address) => address.toString())
@@ -63,7 +66,7 @@ class GroupService {
         groupID: groupID,
         groupName: groupName,
         contractAddress: contractAddress,
-        deposit: groupDeposit,
+        deposit: groupDepositDecimal,
         groupImagePath: 'assets/default_avatar.jpg',
         membersCount: groupSize,
         memberAddresses: memberAddresses);

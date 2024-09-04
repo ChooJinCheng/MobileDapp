@@ -16,7 +16,6 @@ import 'package:dapp/screens/my_portfolio_view.dart';
 import 'package:dapp/wrapper/main_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:web3dart/credentials.dart';
 
 class AppNavigation {
   //Declare named constructor

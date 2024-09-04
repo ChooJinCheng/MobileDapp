@@ -8,6 +8,7 @@ import 'package:dapp/model/event_declined_transaction_model.dart';
 import 'package:dapp/model/event_executed_transaction_model.dart';
 import 'package:dapp/model/user_transaction_model.dart';
 import 'package:dapp/services/ethereum_service.dart';
+import 'package:dapp/utils/decimal_bigint_converter.dart';
 import 'package:web3dart/web3dart.dart';
 
 class TransactionService {
@@ -206,13 +207,16 @@ class TransactionService {
         .toList();
     String transactionTitle = decoded[9].toString();
     BigInt totalAmount = decoded[10] as BigInt;
+    String totalAmountDecimal =
+        DecimalBigIntConverter.bigIntToDecimal(totalAmount).toStringAsFixed(2);
     TransactionCategory transactionCategory =
         TransactionCategoryExtension.fromInt((decoded[11] as BigInt).toInt());
     EthereumAddress userAddress = _ethereumService.userAddress;
     bool transactionType = (payee == userAddress) ? true : false;
     BigInt requiredApproval = (decoded[12] as BigInt);
     bool isInvolved = _isInvolvedInTransaction(payee, payers);
-    double transactAmount = totalAmount / requiredApproval;
+    String transactAmount =
+        calculateTransactAmount(totalAmount, requiredApproval, transactionType);
 
     return UserTransaction(
         date: DateTime(year, month, day),
@@ -223,10 +227,10 @@ class TransactionService {
         transactPayee: payee.toString(),
         transactPayers: payers,
         transactTitle: transactionTitle,
-        totalAmount: totalAmount.toString(),
+        totalAmount: totalAmountDecimal,
         category: transactionCategory,
         transactionType: transactionType,
-        transactAmount: transactAmount.toStringAsFixed(2),
+        transactAmount: transactAmount,
         isInvolved: isInvolved);
   }
 
@@ -237,6 +241,20 @@ class TransactionService {
     }
 
     return false;
+  }
+
+  String calculateTransactAmount(
+      BigInt totalAmount, BigInt payersCount, bool transactionType) {
+    BigInt totalMemberCount = (payersCount + BigInt.one);
+    BigInt splitAmount = totalAmount ~/ totalMemberCount;
+    BigInt payeeAmount = totalAmount - splitAmount;
+
+    String payerAmountDecimal =
+        DecimalBigIntConverter.bigIntToDecimal(splitAmount).toStringAsFixed(2);
+    String payeeAmountDecimal =
+        DecimalBigIntConverter.bigIntToDecimal(payeeAmount).toStringAsFixed(2);
+
+    return transactionType ? payeeAmountDecimal : payerAmountDecimal;
   }
 
   EventApprovedTransaction decodeEventApprovedTransaction(

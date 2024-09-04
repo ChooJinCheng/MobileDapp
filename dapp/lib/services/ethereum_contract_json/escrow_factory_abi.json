@@ -1,5 +1,35 @@
 [
     {
+        "inputs": [],
+        "name": "deployEscrow",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "groupName",
+                "type": "string"
+            },
+            {
+                "internalType": "address[]",
+                "name": "members",
+                "type": "address[]"
+            },
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            }
+        ],
+        "name": "deregisterGroupMembership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -69,13 +99,6 @@
         "type": "event"
     },
     {
-        "inputs": [],
-        "name": "deployEscrow",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
         "inputs": [
             {
                 "internalType": "string",
@@ -93,7 +116,20 @@
                 "type": "address"
             }
         ],
-        "name": "deregisterGroupMembership",
+        "name": "registerGroupMembership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "deployedAddress",
+                "type": "address"
+            }
+        ],
+        "name": "storeMockStablecoinAddress",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -107,6 +143,19 @@
             }
         ],
         "name": "getEscrow",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getStablecoinAddress",
         "outputs": [
             {
                 "internalType": "address",
@@ -134,29 +183,6 @@
             }
         ],
         "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "groupName",
-                "type": "string"
-            },
-            {
-                "internalType": "address[]",
-                "name": "members",
-                "type": "address[]"
-            },
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            }
-        ],
-        "name": "registerGroupMembership",
-        "outputs": [],
-        "stateMutability": "nonpayable",
         "type": "function"
     }
 ]
