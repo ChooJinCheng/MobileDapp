@@ -94,13 +94,13 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
     if (value == null || value.isEmpty) {
       return 'Please enter an amount';
     } else if (!_isNumericWith2Decimal(value)) {
-      return 'Please enter only valid numeric value';
+      return 'Please enter a numeric value 2 decimal point';
     }
     return null;
   }
 
   bool _isNumericWith2Decimal(String value) {
-    return RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value);
+    return RegExp(r'^\d+\.\d{2}$').hasMatch(value);
   }
 
   Future<void> _selectDate(BuildContext context) async {

@@ -23,7 +23,7 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
     state = {for (var group in groups) group.groupID: group};
   }
 
-  void updateGroup(GroupProfile group) {
+  void addGroup(GroupProfile group) {
     state = {
       ...state,
       group.groupID: group,
@@ -51,6 +51,23 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
         .listenToEscrowRegisteredEvents(_handleEscrowRegistered);
     eventListenerManager
         .listenToEscrowDeregisteredEvents(_handleEscrowDeregistered);
+
+    AppEventBus.instance.on<TransactionExecutedEvent>().listen((event) async {
+      String groupID = event.groupID;
+      if (state.containsKey(groupID)) {
+        GroupProfile? group = state[groupID];
+        if (group != null) {
+          String groupDeposit = await groupService.fetchGroupMemberBalance(
+              group.groupName, group.contractAddress);
+          group.deposit = groupDeposit;
+
+          Map<String, GroupProfile> newState =
+              Map<String, GroupProfile>.from(state);
+          newState[groupID] = group;
+          state = newState;
+        }
+      }
+    });
   }
 
   void _handleGroupCreated(String groupName, List<EthereumAddress> members,
@@ -106,6 +123,6 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
       String groupName, String memberContractAddress) async {
     final GroupProfile groupProfile =
         await groupService.fetchGroupProfile(memberContractAddress, groupName);
-    updateGroup(groupProfile);
+    addGroup(groupProfile);
   }
 }

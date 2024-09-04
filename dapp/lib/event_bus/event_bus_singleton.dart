@@ -19,3 +19,9 @@ class GroupDisbandedEvent {
 
   GroupDisbandedEvent(this.groupID);
 }
+
+class TransactionExecutedEvent {
+  final String groupID;
+
+  TransactionExecutedEvent(this.groupID);
+}

@@ -151,6 +151,7 @@ class TransactionNotifier
 
     _updateTransaction(
         groupID, eventExecuted.transactID, TransactionStatus.approved);
+    AppEventBus.instance.fire(TransactionExecutedEvent(groupID));
   }
 
   void _updateTransaction(

@@ -590,6 +590,11 @@
                 "internalType": "string",
                 "name": "groupName",
                 "type": "string"
+            },
+            {
+                "internalType": "address",
+                "name": "member",
+                "type": "address"
             }
         ],
         "name": "getGroupMemberBalance",

@@ -86,6 +86,23 @@ class GroupService {
         .toList();
   }
 
+  Future<String> fetchGroupMemberBalance(
+      String groupName, String contractAddress) async {
+    final DeployedContract deployedContract =
+        await _ethereumService.loadEscrowContract(contractAddress);
+    final List<dynamic> groupMemberBalanceResponse =
+        await _ethereumService.query(
+            deployedContract,
+            EscrowFunctions.getGroupMemberBalance.functionName,
+            [groupName],
+            true);
+
+    BigInt groupDeposit = groupMemberBalanceResponse[0] as BigInt;
+    String groupDepositDecimal =
+        DecimalBigIntConverter.bigIntToDecimal(groupDeposit).toStringAsFixed(2);
+    return groupDepositDecimal;
+  }
+
   Future<List<String>> fetchEscrowMembershipAddresses() async {
     final List<dynamic> response = await _ethereumService.query(
         _ethereumService.escrowFactoryContract,
