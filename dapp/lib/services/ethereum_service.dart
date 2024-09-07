@@ -1,7 +1,8 @@
 import 'dart:async';
 
+import 'package:dapp/custom_exception/custom_exception.dart';
 import 'package:dapp/enum/escrow_events.dart';
-import 'package:dapp/utils/utils.dart';
+import 'package:dapp/utils/contact_utils.dart';
 import 'package:http/http.dart';
 import 'package:web3dart/crypto.dart';
 import 'package:web3dart/json_rpc.dart';
@@ -34,32 +35,36 @@ class EthereumService {
   }
 
   void _initialize() async {
-    _client = Web3Client(_rpcUrl, Client());
-    _credentials = EthPrivateKey.fromHex(_privateKey);
+    try {
+      _client = Web3Client(_rpcUrl, Client());
+      _credentials = EthPrivateKey.fromHex(_privateKey);
 
-    escrowFactoryContract = await _instance.loadFactoryContract();
-    final response = await _instance.query(escrowFactoryContract,
-        EscrowFactoryFunctions.getEscrow.functionName, [], true);
-    String address = response[0].toString();
-
-    _initializeContacts(_credentials.address.toString());
-
-    if (address != '0x0000000000000000000000000000000000000000') {
-      escrowContract = await _instance.loadEscrowContract(address);
-      print('Escrow Contract is already deployed at: $address');
-    } else {
-      await deployEscrowContract(escrowFactoryContract);
-      final address = await query(escrowFactoryContract,
+      escrowFactoryContract = await _instance.loadFactoryContract();
+      final response = await _instance.query(escrowFactoryContract,
           EscrowFactoryFunctions.getEscrow.functionName, [], true);
-      escrowContract =
-          await _instance.loadEscrowContract(address[0].toString());
-      print('Newly deployed escrow at: $address');
+      String address = response[0].toString();
+
+      _initializeContacts(_credentials.address.toString());
+
+      if (address != '0x0000000000000000000000000000000000000000') {
+        escrowContract = await _instance.loadEscrowContract(address);
+        print('Escrow Contract is already deployed at: $address');
+      } else {
+        await deployEscrowContract(escrowFactoryContract);
+        final address = await query(escrowFactoryContract,
+            EscrowFactoryFunctions.getEscrow.functionName, [], true);
+        escrowContract =
+            await _instance.loadEscrowContract(address[0].toString());
+        print('Newly deployed escrow at: $address');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
   void _initializeContacts(String userAddress) async {
     //TODO:Temporary placed here, need to move else where more appropriate
-    await Utils.initializeContact(userAddress);
+    await ContactUtils.initializeContact(userAddress);
   }
 
   EthereumAddress get userAddress => _credentials.address;
@@ -103,6 +108,7 @@ class EthereumService {
   callFunction(
       String contractAddress, String functionName, List<dynamic> args) async {
     DeployedContract deployedContract;
+
     if (functionName == EscrowFactoryFunctions.deployEscrow.functionName) {
       deployedContract = await loadFactoryContract();
     } else {
@@ -110,6 +116,7 @@ class EthereumService {
     }
 
     final function = deployedContract.function(functionName);
+
     try {
       final result = await _client.sendTransaction(
         _credentials,
@@ -130,18 +137,13 @@ class EthereumService {
         }
       }
 
-      /* print('Txn Receipt: $receipt');
-      print('Txn Receipt contract addr: ${receipt.contractAddress}');
-      print('Txn Receipt logs: ${receipt.logs}');
- */
       return result;
     } catch (e) {
-      //TODO: Return the error message back to screen
       if (e is RPCError) {
-        String errorMessage = e.message;
-        print(errorMessage);
+        String errorMessage = _parseRPCErrorMessage(e.message);
+        throw RpcException(errorMessage);
       }
-      print('Error in ethService: $e');
+      throw GeneralException('Unexpected error: $e');
     }
   }
 
@@ -150,13 +152,32 @@ class EthereumService {
     if (sendUserAddress) {
       args.add(_credentials.address);
     }
-    final ethFunction = contract.function(functionName);
-    final result = await _client.call(
-      contract: contract,
-      function: ethFunction,
-      params: args,
-    );
-    return result;
+    try {
+      final ethFunction = contract.function(functionName);
+      final result = await _client.call(
+        contract: contract,
+        function: ethFunction,
+        params: args,
+      );
+      return result;
+    } catch (e) {
+      if (e is RPCError) {
+        String errorMessage = _parseRPCErrorMessage(e.message);
+        throw RpcException(errorMessage);
+      }
+      throw GeneralException('Unexpected error: $e');
+    }
+  }
+
+  String _parseRPCErrorMessage(String message) {
+    if (message.contains('revert')) {
+      final parts = message.split('revert');
+      if (parts.length > 1) {
+        return parts[1].trim();
+      }
+      return 'Transaction reverted without a message.';
+    }
+    return message;
   }
 
   Future<List<List<dynamic>>> queryEventLogs(

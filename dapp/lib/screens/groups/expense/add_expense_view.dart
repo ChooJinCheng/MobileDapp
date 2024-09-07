@@ -1,7 +1,10 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
 import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/global_state/providers/transaction_service_provider.dart';
 import 'package:dapp/model/constants/categories_mapping.dart';
 import 'package:dapp/model/group_profile_model.dart';
+import 'package:dapp/services/transaction_service.dart';
+import 'package:dapp/utils/contact_utils.dart';
 import 'package:dapp/utils/decimal_bigint_converter.dart';
 import 'package:dapp/utils/utils.dart';
 import 'package:dapp/widgets/member_multi_choice_input.dart';
@@ -9,7 +12,6 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:web3dart/web3dart.dart';
 
 class AddExpenseView extends ConsumerStatefulWidget {
@@ -54,7 +56,7 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
     List<String> memberNames = [];
     List<String> memberAddresses = widget.groupProfile.memberAddresses;
     Map<String, String> contacts =
-        await Utils.getMembersContactsNameToAddress(memberAddresses);
+        await ContactUtils.getMembersContactsNameToAddress(memberAddresses);
 
     for (String name in contacts.keys) {
       memberNames.add(name);
@@ -112,7 +114,7 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
     );
 
     if (pickedDate != null && pickedDate != _selectedDateTime) {
-      String formattedDate = DateFormat('dd MMM yyyy').format(pickedDate);
+      String formattedDate = Utils.formatDate(pickedDate);
       setState(() {
         _selectedDateTime = pickedDate;
         _formattedDate = formattedDate;
@@ -137,43 +139,7 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
           IconButton(
             onPressed: () {
               if (_formKey.currentState!.validate()) {
-                try {
-                  String title = _titleController.text;
-                  String amountStr = _amountController.text;
-                  BigInt amount = DecimalBigIntConverter.decimalToBigInt(
-                      Decimal.parse(amountStr));
-                  int day = _selectedDateTime!.day;
-                  int month = _selectedDateTime!.month;
-                  int year = _selectedDateTime!.year;
-                  List<EthereumAddress> selectedPayers = _selectedPayers
-                      .map((memberName) => EthereumAddress.fromHex(
-                          _memberNameToAddresses[memberName]!))
-                      .toList();
-
-                  List<dynamic> args = [
-                    groupProfile.groupName,
-                    title,
-                    BigInt.from(_selectedCategory.value),
-                    EthereumAddress.fromHex(
-                        _memberNameToAddresses[_selectedPayee]!),
-                    selectedPayers,
-                    amount,
-                    BigInt.from(day),
-                    BigInt.from(month),
-                    BigInt.from(year)
-                  ];
-                  transactionService.initiateNewTransaction(
-                      groupProfile.contractAddress, args);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Expense Added Successfully')),
-                  );
-                  context.pop();
-                } catch (e) {
-                  print('Error: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Error encountered. Please try again')));
-                }
+                _initiateTransaction(transactionService, groupProfile);
               }
             },
             icon: const Icon(Icons.add_box_rounded),
@@ -445,5 +411,58 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
         ),
       ),
     );
+  }
+
+  void _initiateTransaction(
+      TransactionService transactionService, GroupProfile groupProfile) async {
+    try {
+      String title = _titleController.text;
+      String amountStr = _amountController.text;
+      BigInt amount =
+          DecimalBigIntConverter.decimalToBigInt(Decimal.parse(amountStr));
+      int day = _selectedDateTime!.day;
+      int month = _selectedDateTime!.month;
+      int year = _selectedDateTime!.year;
+      List<EthereumAddress> selectedPayers = _selectedPayers
+          .map((memberName) =>
+              EthereumAddress.fromHex(_memberNameToAddresses[memberName]!))
+          .toList();
+
+      List<dynamic> args = [
+        groupProfile.groupName,
+        title,
+        BigInt.from(_selectedCategory.value),
+        EthereumAddress.fromHex(_memberNameToAddresses[_selectedPayee]!),
+        selectedPayers,
+        amount,
+        BigInt.from(day),
+        BigInt.from(month),
+        BigInt.from(year)
+      ];
+      await transactionService.initiateNewTransaction(
+          groupProfile.contractAddress, args);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Expense Added Successfully')),
+      );
+      context.pop();
+    } on RpcException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Transaction failed: ${e.message}'),
+      ));
+    } on GeneralException catch (e) {
+      if (!mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An unexpected error occurred. Please try again.'),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An error occurred.'),
+      ));
+    }
   }
 }

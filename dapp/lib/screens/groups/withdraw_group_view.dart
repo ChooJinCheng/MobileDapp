@@ -1,3 +1,5 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
+import 'package:dapp/global_state/notifiers/group_profile_state_notifier.dart';
 import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/utils/decimal_bigint_converter.dart';
@@ -107,24 +109,8 @@ class _DepositGroupPageState extends ConsumerState<WithdrawGroupView> {
                 Center(
                     child: SliderButton(
                   action: () async {
-                    try {
-                      String amount = _amountController.text;
-                      if (_formKey.currentState!.validate()) {
-                        groupProfileStateNotifier.withdrawFromGroup(
-                            widget.groupProfile.groupName,
-                            widget.groupProfile.contractAddress,
-                            amount);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Withdrawal is successful!')));
-                        context.pop();
-                        return true;
-                      }
-                    } catch (e) {
-                      print('Error: $e');
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content:
-                              Text('Error encountered. Please try again')));
+                    if (_formKey.currentState!.validate()) {
+                      return _withdrawFromGroup(groupProfileStateNotifier);
                     }
                     return false;
                   },
@@ -155,5 +141,37 @@ class _DepositGroupPageState extends ConsumerState<WithdrawGroupView> {
         ),
       ),
     );
+  }
+
+  Future<bool> _withdrawFromGroup(
+      GroupProfileNotifier groupProfileStateNotifier) async {
+    try {
+      String amount = _amountController.text;
+      groupProfileStateNotifier.withdrawFromGroup(widget.groupProfile.groupName,
+          widget.groupProfile.contractAddress, amount);
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Withdrawal is successful!')));
+      context.pop();
+      return true;
+    } on RpcException catch (e) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Transaction failed: ${e.message}'),
+      ));
+    } on GeneralException catch (e) {
+      if (!mounted) return false;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An unexpected error occurred. Please try again.'),
+      ));
+    } catch (e) {
+      if (!mounted) return false;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An error occurred.'),
+      ));
+    }
+    return false;
   }
 }

@@ -1,3 +1,5 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
+import 'package:dapp/global_state/notifiers/group_profile_state_notifier.dart';
 import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:flutter/material.dart';
@@ -83,24 +85,8 @@ class _DepositGroupPageState extends ConsumerState<DepositGroupView> {
                 Center(
                     child: SliderButton(
                   action: () async {
-                    try {
-                      String amount = _amountController.text;
-                      if (_formKey.currentState!.validate()) {
-                        groupProfileStateNotifier.depositToGroup(
-                            widget.groupProfile.groupName,
-                            widget.groupProfile.contractAddress,
-                            amount);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Deposit is successful!')));
-                        context.pop();
-                        return true;
-                      }
-                    } catch (e) {
-                      print('Error: $e');
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content:
-                              Text('Error encountered. Please try again')));
+                    if (_formKey.currentState!.validate()) {
+                      return await _depositGroup(groupProfileStateNotifier);
                     }
                     return false;
                   },
@@ -131,5 +117,39 @@ class _DepositGroupPageState extends ConsumerState<DepositGroupView> {
         ),
       ),
     );
+  }
+
+  Future<bool> _depositGroup(
+      GroupProfileNotifier groupProfileStateNotifier) async {
+    try {
+      String amount = _amountController.text;
+      await groupProfileStateNotifier.depositToGroup(
+          widget.groupProfile.groupName,
+          widget.groupProfile.contractAddress,
+          amount);
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Deposit is successful!')));
+      context.pop();
+      return true;
+    } on RpcException catch (e) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Transaction failed: ${e.message}'),
+      ));
+    } on GeneralException catch (e) {
+      if (!mounted) return false;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An unexpected error occurred. Please try again.'),
+      ));
+    } catch (e) {
+      if (!mounted) return false;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An error occurred.'),
+      ));
+    }
+    return false;
   }
 }

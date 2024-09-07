@@ -1,4 +1,4 @@
-import 'package:dapp/utils/utils.dart';
+import 'package:dapp/utils/contact_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,14 +19,15 @@ class _MyContactViewState extends State<MyContactView> {
   }
 
   Future<void> _loadContacts() async {
-    Map<String, String> contacts = await Utils.getContactsAddressToName();
+    Map<String, String> contacts =
+        await ContactUtils.getContactsAddressToName();
     setState(() {
       _contacts = contacts;
     });
   }
 
   Future<void> _deleteContact(String address) async {
-    await Utils.deleteContact(address);
+    await ContactUtils.deleteContact(address);
     setState(() {
       _contacts.remove(address);
     });

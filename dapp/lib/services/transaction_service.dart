@@ -1,3 +1,4 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
 import 'package:dapp/enum/escrow_events.dart';
 import 'package:dapp/enum/escrow_functions.dart';
 import 'package:dapp/enum/transaction_category_enum.dart';
@@ -21,20 +22,44 @@ class TransactionService {
 
   Future<void> initiateNewTransaction(
       String groupContractAddress, List<dynamic> args) async {
-    await _ethereumService.callFunction(groupContractAddress,
-        EscrowFunctions.initiateTransaction.functionName, args);
+    try {
+      await _ethereumService.callFunction(groupContractAddress,
+          EscrowFunctions.initiateTransaction.functionName, args);
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in TransactionService: $e');
+    }
   }
 
   Future<void> approveTransaction(
       String groupContractAddress, List<dynamic> args) async {
-    await _ethereumService.callFunction(groupContractAddress,
-        EscrowFunctions.approveTransaction.functionName, args);
+    try {
+      await _ethereumService.callFunction(groupContractAddress,
+          EscrowFunctions.approveTransaction.functionName, args);
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in TransactionService: $e');
+    }
   }
 
   Future<void> declineTransaction(
       String groupContractAddress, List<dynamic> args) async {
-    await _ethereumService.callFunction(groupContractAddress,
-        EscrowFunctions.declineTransaction.functionName, args);
+    try {
+      await _ethereumService.callFunction(groupContractAddress,
+          EscrowFunctions.declineTransaction.functionName, args);
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in TransactionService: $e');
+    }
   }
 
   Future<Map<String, List<UserTransaction>>> fetchGroupTransactions(

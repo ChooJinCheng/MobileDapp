@@ -1,3 +1,4 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
 import 'package:dapp/enum/escrow_factory_functions.dart';
 import 'package:dapp/enum/escrow_functions.dart';
 import 'package:dapp/model/group_profile_model.dart';
@@ -117,18 +118,35 @@ class GroupService {
     return userEscrowMemberships;
   }
 
-  void addNewGroup(List<dynamic> args) {
-    _ethereumService.callFunction(
-      _ethereumService.escrowAddress.toString(),
-      EscrowFunctions.createGroup.functionName,
-      args,
-    );
+  Future<void> addNewGroup(List<dynamic> args) async {
+    try {
+      await _ethereumService.callFunction(
+        _ethereumService.escrowAddress.toString(),
+        EscrowFunctions.createGroup.functionName,
+        args,
+      );
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in GroupService: $e');
+    }
   }
 
-  void disbandGroup(String groupName, String contractAddress) {
+  Future<void> disbandGroup(String groupName, String contractAddress) async {
     List<dynamic> args = [groupName];
-    _ethereumService.callFunction(
-        contractAddress, EscrowFunctions.disbandGroup.functionName, args);
+
+    try {
+      await _ethereumService.callFunction(
+          contractAddress, EscrowFunctions.disbandGroup.functionName, args);
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in GroupService: $e');
+    }
   }
 
   Future<void> depositToGroup(
@@ -137,8 +155,16 @@ class GroupService {
         DecimalBigIntConverter.decimalToBigInt(Decimal.parse(amount));
     List<dynamic> args = [groupName, depositAmount];
 
-    await _ethereumService.callFunction(
-        contractAddress, EscrowFunctions.depositToGroup.functionName, args);
+    try {
+      await _ethereumService.callFunction(
+          contractAddress, EscrowFunctions.depositToGroup.functionName, args);
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in GroupService: $e');
+    }
   }
 
   Future<void> withdrawFromGroup(
@@ -147,7 +173,15 @@ class GroupService {
         DecimalBigIntConverter.decimalToBigInt(Decimal.parse(amount));
     List<dynamic> args = [groupName, depositAmount];
 
-    await _ethereumService.callFunction(
-        contractAddress, EscrowFunctions.withdrawFromGroup.functionName, args);
+    try {
+      await _ethereumService.callFunction(contractAddress,
+          EscrowFunctions.withdrawFromGroup.functionName, args);
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in GroupService: $e');
+    }
   }
 }

@@ -3,11 +3,11 @@ import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
 import 'package:dapp/global_state/providers/transaction_state_provider.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/model/user_transaction_model.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
 import 'package:dapp/widgets/transaction_slidable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 class ManageTransactionView extends ConsumerStatefulWidget {
   const ManageTransactionView({super.key});
@@ -163,15 +163,10 @@ class _ManageTransactionViewState extends ConsumerState<ManageTransactionView> {
     Map<String, List<UserTransaction>> transactionsByDate = {};
 
     for (UserTransaction transaction in transactions) {
-      String formattedDate = _formatDate(transaction.date);
+      String formattedDate = Utils.formatDate(transaction.date);
       transactionsByDate.putIfAbsent(formattedDate, () => []).add(transaction);
     }
     return transactionsByDate;
-  }
-
-  String _formatDate(DateTime date) {
-    String formattedDate = DateFormat('dd MMM yyyy').format(date);
-    return formattedDate;
   }
 
   Widget _buildGroupSection(String groupName, String contractAddress,

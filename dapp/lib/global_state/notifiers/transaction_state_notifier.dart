@@ -30,33 +30,41 @@ class TransactionNotifier
 
   Future<void> loadGroupTransactions(
       String groupID, String groupName, String groupContractAddress) async {
-    Map<String, List<UserTransaction>> groupToTransactionsMap =
-        await transactionService.fetchGroupTransactions(
-            groupName, groupContractAddress);
-    state = {...state, groupID: groupToTransactionsMap};
+    try {
+      Map<String, List<UserTransaction>> groupToTransactionsMap =
+          await transactionService.fetchGroupTransactions(
+              groupName, groupContractAddress);
+      state = {...state, groupID: groupToTransactionsMap};
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 
   _listenToBusAndEscrows() async {
-    List<String> escrowAddresses =
-        await groupService.fetchEscrowMembershipAddresses();
-    escrowAddresses.add(transactionService.escrowAddress.toString());
+    try {
+      List<String> escrowAddresses =
+          await groupService.fetchEscrowMembershipAddresses();
+      escrowAddresses.add(transactionService.escrowAddress.toString());
 
-    for (String address in escrowAddresses) {
-      _listenToGroupEvents(address);
-    }
-
-    AppEventBus.instance.on<EscrowRegisteredEvent>().listen((event) {
-      _listenToGroupEvents(event.memberContractAddress);
-    });
-
-    AppEventBus.instance.on<GroupDisbandedEvent>().listen((event) {
-      if (state.containsKey(event.groupID)) {
-        final newState =
-            Map<String, Map<String, List<UserTransaction>>>.from(state);
-        newState.remove(event.groupID);
-        state = newState;
+      for (String address in escrowAddresses) {
+        _listenToGroupEvents(address);
       }
-    });
+
+      AppEventBus.instance.on<EscrowRegisteredEvent>().listen((event) {
+        _listenToGroupEvents(event.memberContractAddress);
+      });
+
+      AppEventBus.instance.on<GroupDisbandedEvent>().listen((event) {
+        if (state.containsKey(event.groupID)) {
+          final newState =
+              Map<String, Map<String, List<UserTransaction>>>.from(state);
+          newState.remove(event.groupID);
+          state = newState;
+        }
+      });
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 
   _listenToGroupEvents(String address) {
@@ -71,15 +79,19 @@ class TransactionNotifier
   }
 
   void _handleInitiateTransactions(List<dynamic> decoded) {
-    EthereumAddress memberContractAddress = decoded[13] as EthereumAddress;
-    UserTransaction transaction =
-        transactionService.decodeUserTransaction(decoded);
+    try {
+      EthereumAddress memberContractAddress = decoded[13] as EthereumAddress;
+      UserTransaction transaction =
+          transactionService.decodeUserTransaction(decoded);
 
-    String groupID = Utils.generateUniqueID(
-        transaction.groupName, memberContractAddress.toString());
-    if (!state.containsKey(groupID)) return;
+      String groupID = Utils.generateUniqueID(
+          transaction.groupName, memberContractAddress.toString());
+      if (!state.containsKey(groupID)) return;
 
-    _addTransaction(groupID, transaction);
+      _addTransaction(groupID, transaction);
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 
   void _addTransaction(String groupID, UserTransaction transaction) {
@@ -112,46 +124,58 @@ class TransactionNotifier
   }
 
   void _handleApprovedTransactions(List<dynamic> decoded) {
-    EthereumAddress memberContractAddress = decoded[6] as EthereumAddress;
-    EventApprovedTransaction eventApproved =
-        transactionService.decodeEventApprovedTransaction(decoded);
-    if (eventApproved.approver != transactionService.userAddress) return;
+    try {
+      EthereumAddress memberContractAddress = decoded[6] as EthereumAddress;
+      EventApprovedTransaction eventApproved =
+          transactionService.decodeEventApprovedTransaction(decoded);
+      if (eventApproved.approver != transactionService.userAddress) return;
 
-    String groupID = Utils.generateUniqueID(
-        eventApproved.groupName, memberContractAddress.toString());
-    if (!state.containsKey(groupID)) return;
+      String groupID = Utils.generateUniqueID(
+          eventApproved.groupName, memberContractAddress.toString());
+      if (!state.containsKey(groupID)) return;
 
-    _updateTransaction(
-        groupID, eventApproved.transactID, TransactionStatus.pending);
+      _updateTransaction(
+          groupID, eventApproved.transactID, TransactionStatus.pending);
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 
   void _handleDeclinedTransactions(List<dynamic> decoded) {
-    EthereumAddress memberContractAddress = decoded[6] as EthereumAddress;
-    EventDeclinedTransaction eventDeclined =
-        transactionService.decodeEventDeclinedTransaction(decoded);
-    if (eventDeclined.transactStatus != TransactionStatus.declined) return;
+    try {
+      EthereumAddress memberContractAddress = decoded[6] as EthereumAddress;
+      EventDeclinedTransaction eventDeclined =
+          transactionService.decodeEventDeclinedTransaction(decoded);
+      if (eventDeclined.transactStatus != TransactionStatus.declined) return;
 
-    String groupID = Utils.generateUniqueID(
-        eventDeclined.groupName, memberContractAddress.toString());
-    if (!state.containsKey(groupID)) return;
+      String groupID = Utils.generateUniqueID(
+          eventDeclined.groupName, memberContractAddress.toString());
+      if (!state.containsKey(groupID)) return;
 
-    _updateTransaction(
-        groupID, eventDeclined.transactID, TransactionStatus.declined);
+      _updateTransaction(
+          groupID, eventDeclined.transactID, TransactionStatus.declined);
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 
   void _handleExecutedTransactions(List<dynamic> decoded) {
-    EthereumAddress memberContractAddress = decoded[6] as EthereumAddress;
-    EventExecutedTransaction eventExecuted =
-        transactionService.decodeEventExecutedTransaction(decoded);
-    if (eventExecuted.transactStatus != TransactionStatus.approved) return;
+    try {
+      EthereumAddress memberContractAddress = decoded[6] as EthereumAddress;
+      EventExecutedTransaction eventExecuted =
+          transactionService.decodeEventExecutedTransaction(decoded);
+      if (eventExecuted.transactStatus != TransactionStatus.approved) return;
 
-    String groupID = Utils.generateUniqueID(
-        eventExecuted.groupName, memberContractAddress.toString());
-    if (!state.containsKey(groupID)) return;
+      String groupID = Utils.generateUniqueID(
+          eventExecuted.groupName, memberContractAddress.toString());
+      if (!state.containsKey(groupID)) return;
 
-    _updateTransaction(
-        groupID, eventExecuted.transactID, TransactionStatus.approved);
-    AppEventBus.instance.fire(TransactionExecutedEvent(groupID));
+      _updateTransaction(
+          groupID, eventExecuted.transactID, TransactionStatus.approved);
+      AppEventBus.instance.fire(TransactionExecutedEvent(groupID));
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 
   void _updateTransaction(

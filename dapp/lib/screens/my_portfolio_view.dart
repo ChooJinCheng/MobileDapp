@@ -1,128 +1,55 @@
-import 'package:dapp/enum/transaction_category_enum.dart';
-import 'package:dapp/enum/transaction_status_enum.dart';
+import 'package:dapp/enum/transaction_grouping_status_enum.dart';
+import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
+import 'package:dapp/global_state/providers/transaction_state_provider.dart';
 import 'package:dapp/model/user_transaction_model.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
 import 'package:dapp/widgets/recent_transaction_list.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/widgets/group_carousel_card.dart';
 import 'package:dapp/widgets/portfolio_card.dart';
 import 'package:flutter_carousel_widget/flutter_carousel_widget.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MyPortfolioView extends StatefulWidget {
+class MyPortfolioView extends ConsumerStatefulWidget {
   const MyPortfolioView({super.key});
 
   @override
-  State<MyPortfolioView> createState() => _MyPortfolioViewState();
+  ConsumerState<MyPortfolioView> createState() => _MyPortfolioViewState();
 }
 
-class _MyPortfolioViewState extends State<MyPortfolioView> {
-  final List<GroupProfile> groupProfiles = [
-    GroupProfile(
-        groupID: 'test1',
-        groupName: 'Dog Lovers',
-        contractAddress: 'test1',
-        deposit: '100.00',
-        groupImagePath: 'assets/dog.jpg',
-        membersCount: '3',
-        memberAddresses: []),
-    GroupProfile(
-        groupID: 'test2',
-        groupName: 'Cat Lovers',
-        contractAddress: 'test2',
-        deposit: '310.12',
-        groupImagePath: 'assets/cat.jpg',
-        membersCount: '2',
-        memberAddresses: []),
-    GroupProfile(
-        groupID: 'test3',
-        groupName: 'Bird Loverssssssssssssssssssss',
-        contractAddress: 'test3',
-        deposit: '3154.11',
-        groupImagePath: 'assets/bird.jpg',
-        membersCount: '5',
-        memberAddresses: []),
-    GroupProfile(
-        groupID: 'test4',
-        groupName: 'Flower Lovers',
-        contractAddress: 'test4',
-        deposit: '16804.37',
-        groupImagePath: 'assets/flower.jpg',
-        membersCount: '2',
-        memberAddresses: [])
-  ];
-
-  final List<UserTransaction> userTransactions = [
-    UserTransaction(
-        transactID: '1',
-        groupName: 'Dog Lovers',
-        transactionType: true,
-        date: DateTime(2024, 8, 12),
-        transactAmount: '54',
-        category: TransactionCategory.food,
-        totalAmount: '162',
-        transactTitle: 'Japanese Restaurant',
-        transactInitiator: 'You',
-        transactPayee: 'You',
-        transactPayers: [],
-        transactStatus: TransactionStatus.approved,
-        isInvolved: false),
-    UserTransaction(
-        transactID: '2',
-        groupName: 'Cat Lovers',
-        transactionType: false,
-        date: DateTime(2024, 8, 12),
-        transactAmount: '25',
-        category: TransactionCategory.transport,
-        totalAmount: '75',
-        transactTitle: 'Grab from Jurong West to Tampines',
-        transactInitiator: 'Mary',
-        transactPayee: 'Mary',
-        transactPayers: [],
-        transactStatus: TransactionStatus.approved,
-        isInvolved: false),
-    UserTransaction(
-        transactID: '3',
-        groupName: 'Bird Lovers',
-        transactionType: false,
-        date: DateTime(2024, 8, 12),
-        transactAmount: '65',
-        category: TransactionCategory.activity,
-        totalAmount: '195',
-        transactTitle: 'Bird Sight Equipment Rental',
-        transactInitiator: 'Mary',
-        transactPayee: 'John',
-        transactPayers: [],
-        transactStatus: TransactionStatus.approved,
-        isInvolved: false),
-    UserTransaction(
-        transactID: '4',
-        groupName: 'Flower Lovers',
-        transactionType: true,
-        date: DateTime(2024, 8, 12),
-        transactAmount: '-',
-        category: TransactionCategory.apparel,
-        totalAmount: '162',
-        transactTitle: 'Uniqlo flower series',
-        transactInitiator: 'Mary',
-        transactPayee: 'You',
-        transactPayers: [],
-        transactStatus: TransactionStatus.declined,
-        isInvolved: false),
-  ];
+class _MyPortfolioViewState extends ConsumerState<MyPortfolioView> {
+  @override
+  void initState() {
+    _initGroupProfileState();
+    _initTransactionState();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     final deviceSize = MediaQuery.of(context).size;
+    Map<String, GroupProfile> groupProfileProvider =
+        ref.watch(groupProfileStateProvider);
+    Map<String, Map<String, List<UserTransaction>>> transactionProvider =
+        ref.watch(transactionStateProvider);
+
+    List<GroupProfile> groupProfiles = groupProfileProvider.values.toList();
+
+    String totalAmount = _getTotalBalance(groupProfiles);
+
     List<Widget> groupCards = groupProfiles
         .map((group) => groupCarouselCard(
             group.groupName, group.deposit, group.groupImagePath))
         .toList();
-
     String groupCount = groupCards.length.toString();
     if (groupCards.isEmpty) {
       groupCards.add(emptyMessageCard('You are not in any group'));
     }
+
+    List<UserTransaction> userTransactions =
+        _getRecentTransactions(transactionProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -139,7 +66,7 @@ class _MyPortfolioViewState extends State<MyPortfolioView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              portfolioCard(),
+              portfolioCard(totalAmount), //TODO: Integrate wallet value
               const SizedBox(height: 16.0),
               Text('You are in $groupCount groups',
                   style: const TextStyle(
@@ -162,5 +89,55 @@ class _MyPortfolioViewState extends State<MyPortfolioView> {
             ],
           )),
     );
+  }
+
+  List<UserTransaction> _getRecentTransactions(
+      Map<String, Map<String, List<UserTransaction>>> transactionProvider) {
+    List<UserTransaction> recentTransactions = [];
+
+    for (String groupID in transactionProvider.keys) {
+      List<UserTransaction>? transactions = transactionProvider[groupID]
+          ?[TransactionGroupingStatus.otherStatus.name];
+
+      if (transactions != null && transactions.isNotEmpty) {
+        List<UserTransaction> top3Transactions = transactions.take(3).toList();
+        recentTransactions.addAll(top3Transactions);
+      }
+    }
+    recentTransactions.sort((a, b) => b.date.compareTo(a.date));
+
+    return recentTransactions.take(3).toList();
+  }
+
+  String _getTotalBalance(List<GroupProfile> groupProfiles) {
+    Decimal totalAmount = Decimal.fromInt(0);
+
+    for (GroupProfile group in groupProfiles) {
+      totalAmount += Decimal.parse(group.deposit);
+    }
+
+    return totalAmount.toStringAsFixed(2);
+  }
+
+  void _initGroupProfileState() {
+    final groupProfileNotifier = ref.read(groupProfileStateProvider.notifier);
+    if (groupProfileNotifier.isEmpty) {
+      groupProfileNotifier.loadGroupProfiles();
+    }
+  }
+
+  void _initTransactionState() {
+    Map<String, GroupProfile> groupProfile =
+        ref.read(groupProfileStateProvider);
+    if (groupProfile.isNotEmpty) {
+      for (GroupProfile groupProfile in groupProfile.values) {
+        final transactionStateNotifier =
+            ref.read(transactionStateProvider.notifier);
+        if (!transactionStateNotifier.isExist(groupProfile.groupID)) {
+          transactionStateNotifier.loadGroupTransactions(groupProfile.groupID,
+              groupProfile.groupName, groupProfile.contractAddress);
+        }
+      }
+    }
   }
 }

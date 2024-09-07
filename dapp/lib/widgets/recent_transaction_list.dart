@@ -1,5 +1,8 @@
 import 'package:dapp/enum/transaction_category_enum.dart';
+import 'package:dapp/enum/transaction_status_enum.dart';
+import 'package:dapp/model/constants/categories_mapping.dart';
 import 'package:dapp/model/user_transaction_model.dart';
+import 'package:dapp/utils/utils.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
 import 'package:flutter/material.dart';
 
@@ -40,33 +43,29 @@ Widget recentTransactionList(
               transactionViewCard(
                   userTransaction.groupName,
                   userTransaction.transactionType,
-                  userTransaction.date.toString(),
+                  Utils.formatDate(userTransaction.date),
                   userTransaction.transactAmount,
-                  userTransaction.category))
+                  userTransaction.category,
+                  userTransaction.transactStatus,
+                  userTransaction.isInvolved))
       ],
     ),
   );
 }
 
-//Need to synchronize with created enums and mappings
-Widget transactionViewCard(String groupName, bool transactionType, String date,
-    String transactAmount, TransactionCategory category) {
-  Map<String, IconData> categories = {
-    'food': Icons.local_dining,
-    'activity': Icons.attractions,
-    'transport': Icons.commute,
-    'services': Icons.miscellaneous_services,
-    'apparel': Icons.checkroom
-  };
-  Color? transactionColor = Colors.green[700];
-  if (transactionType) {
-    transactAmount = '+\$$transactAmount';
-    groupName = '$groupName "You get"';
-  } else {
-    transactAmount = '-\$$transactAmount';
-    groupName = '$groupName "You sent"';
-    transactionColor = Colors.redAccent[700];
-  }
+Widget transactionViewCard(
+    String groupName,
+    bool transactionType,
+    String date,
+    String amount,
+    TransactionCategory category,
+    TransactionStatus status,
+    bool isInvolved) {
+  Color? transactionColor = _transactionColor(transactionType, status);
+  String transactAmount =
+      _formattedAmount(amount, transactionType, status, isInvolved);
+  String transactGroupName =
+      _formattedGroupName(groupName, transactionType, status);
 
   return Container(
     margin: const EdgeInsets.only(bottom: 10.0),
@@ -93,7 +92,7 @@ Widget transactionViewCard(String groupName, bool transactionType, String date,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(groupName, style: const TextStyle(fontSize: 16)),
+              Text(transactGroupName, style: const TextStyle(fontSize: 16)),
               Text(date, style: const TextStyle(color: Colors.black54)),
             ],
           ),
@@ -108,4 +107,24 @@ Widget transactionViewCard(String groupName, bool transactionType, String date,
       ],
     ),
   );
+}
+
+String _formattedAmount(
+    String amount, bool isCredit, TransactionStatus status, bool isInvolved) {
+  if (status == TransactionStatus.declined || !isInvolved) return '--';
+  return isCredit ? '+\$$amount' : '-\$$amount';
+}
+
+String _formattedGroupName(
+    String groupName, bool isCredit, TransactionStatus status) {
+  if (status == TransactionStatus.declined) return '$groupName "Declined"';
+  return isCredit ? '$groupName "You get"' : '$groupName "You sent"';
+}
+
+Color? _transactionColor(bool isCredit, TransactionStatus status) {
+  if (status == TransactionStatus.declined) {
+    return Colors.black54;
+  }
+
+  return isCredit ? Colors.green[700] : Colors.redAccent[700];
 }

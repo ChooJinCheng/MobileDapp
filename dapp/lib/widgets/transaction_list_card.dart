@@ -1,7 +1,7 @@
 import 'package:dapp/enum/transaction_category_enum.dart';
 import 'package:dapp/enum/transaction_status_enum.dart';
 import 'package:dapp/model/user_transaction_model.dart';
-import 'package:dapp/utils/utils.dart';
+import 'package:dapp/utils/contact_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:dapp/model/constants/categories_mapping.dart';
 import 'package:intl/intl.dart';
@@ -122,6 +122,6 @@ Color? _transactionColor(
 }
 
 Future<String?> _getPayeeName(String address) async {
-  String name = await Utils.getContact(address) ?? address;
+  String name = await ContactUtils.getContact(address) ?? address;
   return name;
 }

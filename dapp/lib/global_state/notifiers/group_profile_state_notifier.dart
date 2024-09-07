@@ -1,3 +1,4 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
 import 'package:dapp/event_bus/event_bus_singleton.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/services/event_listener_manager.dart';
@@ -19,8 +20,12 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
   bool get isEmpty => state.isEmpty;
 
   Future<void> loadGroupProfiles() async {
-    List<GroupProfile> groups = await groupService.fetchGroupProfiles();
-    state = {for (var group in groups) group.groupID: group};
+    try {
+      List<GroupProfile> groups = await groupService.fetchGroupProfiles();
+      state = {for (var group in groups) group.groupID: group};
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 
   void addGroup(GroupProfile group) {
@@ -38,76 +43,108 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
 
   Future<void> depositToGroup(
       String groupName, String contractAddress, String amount) async {
-    await groupService.depositToGroup(groupName, contractAddress, amount);
-    String groupID = Utils.generateUniqueID(groupName, contractAddress);
-    await _updateGroupMemberBalance(groupID);
+    try {
+      await groupService.depositToGroup(groupName, contractAddress, amount);
+      String groupID = Utils.generateUniqueID(groupName, contractAddress);
+      await _updateGroupMemberBalance(groupID);
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in GroupProfileStateNotifier: $e');
+    }
   }
 
   Future<void> withdrawFromGroup(
       String groupName, String contractAddress, String amount) async {
-    await groupService.withdrawFromGroup(groupName, contractAddress, amount);
-    String groupID = Utils.generateUniqueID(groupName, contractAddress);
-    await _updateGroupMemberBalance(groupID);
+    try {
+      await groupService.withdrawFromGroup(groupName, contractAddress, amount);
+      String groupID = Utils.generateUniqueID(groupName, contractAddress);
+      await _updateGroupMemberBalance(groupID);
+    } on RpcException {
+      rethrow;
+    } on GeneralException {
+      rethrow;
+    } catch (e) {
+      throw GeneralException('Unknown error in GroupProfileStateNotifier: $e');
+    }
   }
 
   _listenToGroupEvents() async {
-    List<String> escrowAddresses =
-        await groupService.fetchEscrowMembershipAddresses();
-    escrowAddresses.add(groupService.escrowAddress.toString());
+    try {
+      List<String> escrowAddresses =
+          await groupService.fetchEscrowMembershipAddresses();
+      escrowAddresses.add(groupService.escrowAddress.toString());
 
-    for (String address in escrowAddresses) {
-      eventListenerManager.listenToGroupCreatedEvents(
-          address, _handleGroupCreated);
-      eventListenerManager.listenToGroupDisbandedEvents(
-          address, _handleGroupDisbanded);
+      for (String address in escrowAddresses) {
+        eventListenerManager.listenToGroupCreatedEvents(
+            address, _handleGroupCreated);
+        eventListenerManager.listenToGroupDisbandedEvents(
+            address, _handleGroupDisbanded);
+      }
+      eventListenerManager
+          .listenToEscrowRegisteredEvents(_handleEscrowRegistered);
+      eventListenerManager
+          .listenToEscrowDeregisteredEvents(_handleEscrowDeregistered);
+
+      AppEventBus.instance.on<TransactionExecutedEvent>().listen((event) async {
+        String groupID = event.groupID;
+        await _updateGroupMemberBalance(groupID);
+      });
+    } catch (e) {
+      print('Error: $e');
     }
-    eventListenerManager
-        .listenToEscrowRegisteredEvents(_handleEscrowRegistered);
-    eventListenerManager
-        .listenToEscrowDeregisteredEvents(_handleEscrowDeregistered);
-
-    AppEventBus.instance.on<TransactionExecutedEvent>().listen((event) async {
-      String groupID = event.groupID;
-      await _updateGroupMemberBalance(groupID);
-    });
   }
 
   Future<void> _updateGroupMemberBalance(String groupID) async {
-    if (state.containsKey(groupID)) {
-      GroupProfile? group = state[groupID];
-      if (group != null) {
-        String groupDeposit = await groupService.fetchGroupMemberBalance(
-            group.groupName, group.contractAddress);
-        group.deposit = groupDeposit;
+    try {
+      if (state.containsKey(groupID)) {
+        GroupProfile? group = state[groupID];
+        if (group != null) {
+          String groupDeposit = await groupService.fetchGroupMemberBalance(
+              group.groupName, group.contractAddress);
+          group.deposit = groupDeposit;
 
-        Map<String, GroupProfile> newState =
-            Map<String, GroupProfile>.from(state);
-        newState[groupID] = group;
-        state = newState;
+          Map<String, GroupProfile> newState =
+              Map<String, GroupProfile>.from(state);
+          newState[groupID] = group;
+          state = newState;
+        }
       }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
   void _handleGroupCreated(String groupName, List<EthereumAddress> members,
       String memberContractAddress) async {
-    for (EthereumAddress member in members) {
-      if (member == groupService.userAddress) {
-        await _fetchAndUpdateGroup(groupName, memberContractAddress);
-        break;
+    try {
+      for (EthereumAddress member in members) {
+        if (member == groupService.userAddress) {
+          await _fetchAndUpdateGroup(groupName, memberContractAddress);
+          break;
+        }
       }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
   void _handleGroupDisbanded(String groupName, List<EthereumAddress> members,
       String memberContractAddress) async {
-    for (EthereumAddress member in members) {
-      if (member == groupService.userAddress) {
-        String groupID =
-            Utils.generateUniqueID(groupName, memberContractAddress);
-        removeGroup(groupID);
-        AppEventBus.instance.fire(GroupDisbandedEvent(groupID));
-        break;
+    try {
+      for (EthereumAddress member in members) {
+        if (member == groupService.userAddress) {
+          String groupID =
+              Utils.generateUniqueID(groupName, memberContractAddress);
+          removeGroup(groupID);
+          AppEventBus.instance.fire(GroupDisbandedEvent(groupID));
+          break;
+        }
       }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
@@ -115,15 +152,19 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
       String groupName,
       EthereumAddress memberContractAddress,
       EthereumAddress memberAddress) async {
-    if (memberAddress == groupService.userAddress) {
-      String memberContractAddressStr = memberContractAddress.toString();
-      eventListenerManager.listenToGroupCreatedEvents(
-          memberContractAddressStr, _handleGroupCreated);
-      eventListenerManager.listenToGroupDisbandedEvents(
-          memberContractAddressStr, _handleGroupDisbanded);
-      await _fetchAndUpdateGroup(groupName, memberContractAddressStr);
-      AppEventBus.instance
-          .fire(EscrowRegisteredEvent(memberContractAddressStr));
+    try {
+      if (memberAddress == groupService.userAddress) {
+        String memberContractAddressStr = memberContractAddress.toString();
+        eventListenerManager.listenToGroupCreatedEvents(
+            memberContractAddressStr, _handleGroupCreated);
+        eventListenerManager.listenToGroupDisbandedEvents(
+            memberContractAddressStr, _handleGroupDisbanded);
+        await _fetchAndUpdateGroup(groupName, memberContractAddressStr);
+        AppEventBus.instance
+            .fire(EscrowRegisteredEvent(memberContractAddressStr));
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
@@ -131,9 +172,13 @@ class GroupProfileNotifier extends StateNotifier<Map<String, GroupProfile>> {
       String groupName,
       EthereumAddress memberContractAddress,
       EthereumAddress memberAddress) async {
-    if (memberAddress == groupService.userAddress) {
-      eventListenerManager
-          .stopListeningForContract(memberContractAddress.toString());
+    try {
+      if (memberAddress == groupService.userAddress) {
+        eventListenerManager
+            .stopListeningForContract(memberContractAddress.toString());
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 

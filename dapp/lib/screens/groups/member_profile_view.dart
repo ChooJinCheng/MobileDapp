@@ -1,4 +1,4 @@
-import 'package:dapp/utils/utils.dart';
+import 'package:dapp/utils/contact_utils.dart';
 import 'package:flutter/material.dart';
 
 class MemberProfileView extends StatefulWidget {
@@ -24,7 +24,7 @@ class _MemberProfileViewState extends State<MemberProfileView> {
     Map<String, String> membersContacts = {};
 
     for (String address in memberAddresses) {
-      String name = await Utils.getContact(address) ?? address;
+      String name = await ContactUtils.getContact(address) ?? address;
       membersContacts[name] = address;
     }
 

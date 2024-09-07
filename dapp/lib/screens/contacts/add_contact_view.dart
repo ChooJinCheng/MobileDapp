@@ -1,4 +1,4 @@
-import 'package:dapp/utils/utils.dart';
+import 'package:dapp/utils/contact_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:validators/validators.dart';
@@ -23,7 +23,7 @@ class _AddContactViewState extends State<AddContactView> {
   }
 
   Future<void> _saveContact(String name, String address) async {
-    await Utils.storeContact(name, address);
+    await ContactUtils.storeContact(name, address);
   }
 
   String? _validateName(String? value) {

@@ -1,10 +1,12 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
 import 'package:dapp/global_state/providers/transaction_service_provider.dart';
 import 'package:dapp/model/user_transaction_model.dart';
+import 'package:dapp/services/transaction_service.dart';
+import 'package:dapp/utils/contact_utils.dart';
 import 'package:dapp/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:intl/intl.dart';
 
 class TransactionSlidable extends ConsumerWidget {
   final UserTransaction userTransaction;
@@ -20,7 +22,7 @@ class TransactionSlidable extends ConsumerWidget {
         future: _getInitiatorName(userTransaction.transactInitiator),
         builder: (context, snapshot) {
           final transactionService = ref.watch(transactionServiceProvider);
-          String date = DateFormat('dd MMM yyyy').format(userTransaction.date);
+          String date = Utils.formatDate(userTransaction.date);
           String transactInitiator = userTransaction.transactInitiator;
           String transactAmount = userTransaction.transactAmount;
 
@@ -37,21 +39,7 @@ class TransactionSlidable extends ConsumerWidget {
                   children: [
                     SlidableAction(
                       onPressed: (context) {
-                        try {
-                          List<dynamic> args = [
-                            userTransaction.groupName,
-                            BigInt.from(int.parse(userTransaction.transactID))
-                          ];
-
-                          transactionService.declineTransaction(
-                              groupContractAddress, args);
-                        } catch (e) {
-                          print('Error: $e');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Error encountered. Please try again')));
-                        }
+                        _declineTransasction(transactionService, context);
                       },
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
@@ -60,20 +48,7 @@ class TransactionSlidable extends ConsumerWidget {
                     ),
                     SlidableAction(
                       onPressed: (context) {
-                        try {
-                          List<dynamic> args = [
-                            userTransaction.groupName,
-                            BigInt.from(int.parse(userTransaction.transactID))
-                          ];
-                          transactionService.approveTransaction(
-                              groupContractAddress, args);
-                        } catch (e) {
-                          print('Error: $e');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Error encountered. Please try again')));
-                        }
+                        _approveTransaction(transactionService, context);
                       },
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -139,9 +114,74 @@ class TransactionSlidable extends ConsumerWidget {
           );
         });
   }
+
+  void _declineTransasction(
+      TransactionService transactionService, BuildContext context) async {
+    try {
+      List<dynamic> args = [
+        userTransaction.groupName,
+        BigInt.from(int.parse(userTransaction.transactID))
+      ];
+
+      await transactionService.declineTransaction(groupContractAddress, args);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Transaction Declined'),
+      ));
+    } on RpcException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Transaction failed: ${e.message}'),
+      ));
+    } on GeneralException catch (e) {
+      if (!context.mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An unexpected error occurred. Please try again.'),
+      ));
+    } catch (e) {
+      if (!context.mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An error occurred.'),
+      ));
+    }
+  }
+
+  void _approveTransaction(
+      TransactionService transactionService, BuildContext context) async {
+    try {
+      List<dynamic> args = [
+        userTransaction.groupName,
+        BigInt.from(int.parse(userTransaction.transactID))
+      ];
+      await transactionService.approveTransaction(groupContractAddress, args);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Transaction Approved'),
+      ));
+    } on RpcException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Transaction failed: ${e.message}'),
+      ));
+    } on GeneralException catch (e) {
+      if (!context.mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An unexpected error occurred. Please try again.'),
+      ));
+    } catch (e) {
+      if (!context.mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An error occurred.'),
+      ));
+    }
+  }
 }
 
 Future<String?> _getInitiatorName(String address) async {
-  String name = await Utils.getContact(address) ?? address;
+  String name = await ContactUtils.getContact(address) ?? address;
   return name;
 }

@@ -1,5 +1,7 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
 import 'package:dapp/global_state/providers/group_service_provider.dart';
 import 'package:dapp/model/group_profile_model.dart';
+import 'package:dapp/services/group_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -57,15 +59,7 @@ class GroupListCard extends ConsumerWidget {
                 shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(14.0))),
                 onSelected: (String value) {
-                  if (value == 'Disband') {
-                    groupService.disbandGroup(
-                        groupProfile.groupName, groupProfile.contractAddress);
-                    //TODO: Need to display error for e.g. trying to disband other owner group
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Group Disbanded Successfully')),
-                    );
-                  }
+                  _disbandGroup(value, groupService, context);
                 },
                 itemBuilder: (BuildContext context) {
                   return {'Deposit', 'Withdraw', 'Disband'}
@@ -82,5 +76,36 @@ class GroupListCard extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _disbandGroup(String selectedValue, GroupService groupService,
+      BuildContext context) async {
+    try {
+      if (selectedValue == 'Disband') {
+        await groupService.disbandGroup(
+            groupProfile.groupName, groupProfile.contractAddress);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Group Disbanded Successfully')),
+        );
+      }
+    } on RpcException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Transaction failed: ${e.message}'),
+      ));
+    } on GeneralException catch (e) {
+      if (!context.mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An unexpected error occurred. Please try again.'),
+      ));
+    } catch (e) {
+      if (!context.mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An error occurred.'),
+      ));
+    }
   }
 }

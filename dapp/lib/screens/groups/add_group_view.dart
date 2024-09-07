@@ -1,5 +1,7 @@
+import 'package:dapp/custom_exception/custom_exception.dart';
 import 'package:dapp/global_state/providers/group_service_provider.dart';
-import 'package:dapp/utils/utils.dart';
+import 'package:dapp/services/group_service.dart';
+import 'package:dapp/utils/contact_utils.dart';
 import 'package:dapp/widgets/member_multi_choice_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +30,8 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
   }
 
   Future<void> _loadContactAddresses() async {
-    Map<String, String> contacts = await Utils.getContactsNameToAddress();
+    Map<String, String> contacts =
+        await ContactUtils.getContactsNameToAddress();
 
     setState(() {
       _memberNameToAddresses = contacts;
@@ -75,31 +78,9 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
+            onPressed: () async {
               if (_formKey.currentState!.validate()) {
-                try {
-                  List<dynamic> args = [];
-                  String groupName = _groupNameController.text;
-                  List<EthereumAddress> members = _selectedMembers
-                      .map((name) => EthereumAddress.fromHex(
-                          _memberNameToAddresses[name]!))
-                      .toList();
-                  if (!_selectedMembers
-                      .contains(groupService.userAddress.toString())) {
-                    members.add(groupService.userAddress);
-                  }
-                  args.add(groupName);
-                  args.add(members);
-                  groupService.addNewGroup(args);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Group Added Successfully')),
-                  );
-                  context.pop();
-                } catch (e) {
-                  print('Error: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Error encountered. Please try again')));
-                }
+                _addNewGroup(groupService);
               }
             },
             icon: const Icon(Icons.group_add_sharp),
@@ -128,7 +109,6 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
                         decoration: const InputDecoration(
                           labelText: 'Group Name',
                         ),
-                        // The validator receives the text that the user has entered.
                         validator: _validateGroupName),
                   ),
                 ],
@@ -155,5 +135,46 @@ class _AddGroupViewState extends ConsumerState<AddGroupView> {
         ),
       ),
     );
+  }
+
+  Future<void> _addNewGroup(GroupService groupService) async {
+    try {
+      List<dynamic> args = [];
+      String groupName = _groupNameController.text;
+      List<EthereumAddress> members = _selectedMembers
+          .map((name) => EthereumAddress.fromHex(_memberNameToAddresses[name]!))
+          .toList();
+      if (!_selectedMembers.contains(groupService.userAddress.toString())) {
+        members.add(groupService.userAddress);
+      }
+      args.add(groupName);
+      args.add(members);
+
+      await groupService.addNewGroup(args);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Group Added Successfully')),
+      );
+
+      context.pop();
+    } on RpcException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Transaction failed: ${e.message}'),
+      ));
+    } on GeneralException catch (e) {
+      if (!mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An unexpected error occurred. Please try again.'),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('An error occurred.'),
+      ));
+    }
   }
 }

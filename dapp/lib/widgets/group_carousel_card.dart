@@ -20,6 +20,7 @@ Widget groupCarouselCard(
         CircleAvatar(
           backgroundImage: AssetImage(groupImagePath),
           radius: 30.0,
+          backgroundColor: Colors.white,
         ),
         const SizedBox(
           height: 8.0,
