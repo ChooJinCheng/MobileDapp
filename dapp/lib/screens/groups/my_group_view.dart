@@ -1,3 +1,4 @@
+import 'package:dapp/global_state/providers/transaction_state_provider.dart';
 import 'package:dapp/model/group_profile_model.dart';
 import 'package:dapp/global_state/providers/group_profile_state_provider.dart';
 import 'package:dapp/widgets/empty_message_card.dart';
@@ -16,11 +17,9 @@ class MyGroupView extends ConsumerStatefulWidget {
 class _MyGroupViewState extends ConsumerState<MyGroupView> {
   @override
   void initState() {
+    _initGroupProfileState();
+    _initTransactionState();
     super.initState();
-    final groupProfileNotifier = ref.read(groupProfileStateProvider.notifier);
-    if (groupProfileNotifier.isEmpty) {
-      groupProfileNotifier.loadGroupProfiles();
-    }
   }
 
   @override
@@ -90,5 +89,27 @@ class _MyGroupViewState extends ConsumerState<MyGroupView> {
         ),
       ),
     );
+  }
+
+  void _initGroupProfileState() {
+    final groupProfileNotifier = ref.read(groupProfileStateProvider.notifier);
+    if (groupProfileNotifier.isEmpty) {
+      groupProfileNotifier.loadGroupProfiles();
+    }
+  }
+
+  void _initTransactionState() {
+    Map<String, GroupProfile> groupProfile =
+        ref.read(groupProfileStateProvider);
+    if (groupProfile.isNotEmpty) {
+      for (GroupProfile groupProfile in groupProfile.values) {
+        final transactionStateNotifier =
+            ref.read(transactionStateProvider.notifier);
+        if (!transactionStateNotifier.isExist(groupProfile.groupID)) {
+          transactionStateNotifier.loadGroupTransactions(groupProfile.groupID,
+              groupProfile.groupName, groupProfile.contractAddress);
+        }
+      }
+    }
   }
 }

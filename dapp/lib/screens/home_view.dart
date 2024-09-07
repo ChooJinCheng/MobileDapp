@@ -18,8 +18,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text(
-          'Home',
+        title: Text(
+          ethereumService.userAddress.toString(),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
