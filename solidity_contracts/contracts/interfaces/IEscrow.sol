@@ -73,4 +73,5 @@ interface IEscrow {
         string memory groupName,
         address member
     ) external view returns (uint256 balance);
+    function getGroupManager() external view returns (address);
 }

@@ -8,6 +8,10 @@ contract MockUSDC is ERC20 {
         _mint(msg.sender, 1000000 * 10 ** decimals()); // Mint 1 million USDC to the deployer
     }
 
+    function mintTokens(uint amount) external {
+        _mint(msg.sender, amount * 10 ** decimals());
+    }
+
     function decimals() public view virtual override returns (uint8) {
         return 6;
     }

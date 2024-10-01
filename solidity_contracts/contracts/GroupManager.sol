@@ -145,6 +145,7 @@ contract GroupManager is IGroupManager {
             delete groups[groupName].balances[member];
         }
 
+        // Adjust the size of noMembershipInEscrow to actual count
         assembly {
             mstore(noMembershipInEscrow, noMembershipInEscrowCount)
         }

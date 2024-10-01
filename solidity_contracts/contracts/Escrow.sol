@@ -102,6 +102,10 @@ contract Escrow is IEscrow, Ownable, ReentrancyGuard {
         address indexed contractAddress
     );
 
+    event MemberAdded(string groupName, address member);
+
+    event MemberRemoved(string groupName, address member);
+
     constructor(
         address _owner,
         address _factory,
@@ -227,7 +231,7 @@ contract Escrow is IEscrow, Ownable, ReentrancyGuard {
         txn.numApprovals++;
 
         if (txn.numApprovals >= txn.requiredApprovals) {
-            executeTransaction(_transactionId);
+            _executeTransaction(_transactionId);
         } else {
             emit TransactionApproved(
                 txn.groupName,
@@ -277,7 +281,7 @@ contract Escrow is IEscrow, Ownable, ReentrancyGuard {
         );
     }
 
-    function executeTransaction(uint256 _transactionId) internal {
+    function _executeTransaction(uint256 _transactionId) internal {
         Transaction storage txn = transactions[_transactionId];
         require(
             txn.txnStatus == TxnStatus.pending,
@@ -294,6 +298,7 @@ contract Escrow is IEscrow, Ownable, ReentrancyGuard {
             txn.payers,
             txn.value
         );
+
         (uint8 day, uint8 month, uint16 year) = unpackDate(txn.packedDate);
         txn.txnStatus = TxnStatus.approved;
 
@@ -399,6 +404,7 @@ contract Escrow is IEscrow, Ownable, ReentrancyGuard {
         address member
     ) public override onlyOwner validGroupName(groupName) {
         groupManager.addMember(groupName, member);
+        emit MemberAdded(groupName, member);
     }
 
     function removeMemberFromGroup(
@@ -406,6 +412,7 @@ contract Escrow is IEscrow, Ownable, ReentrancyGuard {
         address member
     ) public override onlyOwner validGroupName(groupName) {
         groupManager.removeMember(groupName, member);
+        emit MemberRemoved(groupName, member);
     }
 
     function getAllMemberGroupNames(
@@ -438,6 +445,10 @@ contract Escrow is IEscrow, Ownable, ReentrancyGuard {
         address member
     ) public view override validGroupName(groupName) returns (uint256) {
         return groupManager.getGroupMemberBalance(groupName, member);
+    }
+
+    function getGroupManager() public view returns (address) {
+        return address(groupManager);
     }
 
     function packDate(
