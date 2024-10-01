@@ -1,6 +1,7 @@
 import 'package:dapp/global_state/providers/ethereum_service_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:dapp/widgets/welcome_title.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -20,28 +21,19 @@ class _HomeViewState extends ConsumerState<HomeView> {
         backgroundColor: Colors.white,
         title: Text(
           ethereumService.userAddress.toString(),
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: const CustomScrollView(slivers: [
-        SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Expense Chart',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(
-                  height: 8.0,
-                ),
-              ],
-            ),
+      body: const Column(
+        children: [
+          SizedBox(
+            height: 150,
           ),
-        ),
-      ]),
+          Center(
+            child: WelcomeTitle(),
+          ),
+        ],
+      ),
     );
   }
 }
