@@ -4,13 +4,5 @@
 .vscode/
 
 
-# Hardhat
-cache
-artifacts
-
-#Coverage
-coverage
-coverage.json
-
-# Nodes
-node_modules
+# Files
+solidity_contracts_manual_ver/
