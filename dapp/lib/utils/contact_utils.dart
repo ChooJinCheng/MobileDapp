@@ -31,9 +31,11 @@ class ContactUtils {
     Map<String, String> contacts = {};
 
     for (String key in keys) {
-      final value = prefs.getString(key);
-      if (value != null) {
-        contacts[key] = value;
+      if (_isValidEthereumAddress(key)) {
+        final value = prefs.getString(key);
+        if (value != null) {
+          contacts[key] = value;
+        }
       }
     }
     return contacts;
@@ -45,9 +47,11 @@ class ContactUtils {
     Map<String, String> contacts = {};
 
     for (String key in keys) {
-      final value = prefs.getString(key);
-      if (value != null) {
-        contacts[value] = key;
+      if (_isValidEthereumAddress(key)) {
+        final value = prefs.getString(key);
+        if (value != null) {
+          contacts[value] = key;
+        }
       }
     }
 
@@ -65,5 +69,10 @@ class ContactUtils {
     }
 
     return contacts;
+  }
+
+  static bool _isValidEthereumAddress(String address) {
+    final regex = RegExp(r'^0x[a-fA-F0-9]{40}$');
+    return regex.hasMatch(address);
   }
 }

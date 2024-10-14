@@ -1,4 +1,5 @@
 import 'package:dapp/custom_exception/custom_exception.dart';
+import 'package:dapp/enum/erc20_usdc_functions.dart';
 import 'package:dapp/enum/escrow_factory_functions.dart';
 import 'package:dapp/enum/escrow_functions.dart';
 import 'package:dapp/model/group_profile_model.dart';
@@ -121,10 +122,9 @@ class GroupService {
   Future<void> addNewGroup(List<dynamic> args) async {
     try {
       await _ethereumService.callFunction(
-        _ethereumService.escrowAddress.toString(),
-        EscrowFunctions.createGroup.functionName,
-        args,
-      );
+          _ethereumService.escrowAddress.toString(),
+          EscrowFunctions.createGroup.functionName,
+          args);
     } on RpcException {
       rethrow;
     } on GeneralException {
@@ -155,7 +155,14 @@ class GroupService {
         DecimalBigIntConverter.decimalToBigInt(Decimal.parse(amount));
     List<dynamic> args = [groupName, depositAmount];
 
+    bool isAllowanceSuffice = await isMemberTokenAllowanceSufficient(amount);
     try {
+      if (!isAllowanceSuffice) {
+        await approveUsdcAllowance(amount);
+      }
+
+      await Future.delayed(const Duration(seconds: 1));
+
       await _ethereumService.callFunction(
           contractAddress, EscrowFunctions.depositToGroup.functionName, args);
     } on RpcException {
@@ -183,5 +190,33 @@ class GroupService {
     } catch (e) {
       throw GeneralException('Unknown error in GroupService: $e');
     }
+  }
+
+  Future<void> approveUsdcAllowance(String amount) async {
+    BigInt depositUsdcUnitAmount =
+        DecimalBigIntConverter.decimalToUsdcUnit(Decimal.parse(amount));
+    EthereumAddress spender = _ethereumService.escrowAddress;
+    List<dynamic> args = [spender, depositUsdcUnitAmount];
+
+    return await _ethereumService.callFunction(
+        _ethereumService.usdcContractAddress,
+        Erc20UsdcFunctions.approve.functionName,
+        args);
+  }
+
+  Future<bool> isMemberTokenAllowanceSufficient(String amount) async {
+    BigInt depositUsdcUnitAmount =
+        DecimalBigIntConverter.decimalToUsdcUnit(Decimal.parse(amount));
+    EthereumAddress owner = _ethereumService.userAddress;
+    EthereumAddress spender = _ethereumService.escrowAddress;
+    List<dynamic> args = [owner, spender];
+
+    final List<dynamic> allowanceResponse = await _ethereumService.query(
+        _ethereumService.usdcContract,
+        Erc20UsdcFunctions.allowance.functionName,
+        args,
+        false);
+    BigInt allowanceAmount = allowanceResponse[0] as BigInt;
+    return allowanceAmount >= depositUsdcUnitAmount ? true : false;
   }
 }

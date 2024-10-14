@@ -50,6 +50,7 @@ class _AddContactViewState extends State<AddContactView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Contact'),
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

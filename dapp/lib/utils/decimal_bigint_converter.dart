@@ -8,6 +8,10 @@ class DecimalBigIntConverter {
   static const int twoDecimalPrecision = 2;
   static BigInt tdpScaleFactor = BigInt.from(10).pow(twoDecimalPrecision);
 
+  static BigInt decimalToUsdcUnit(Decimal decimal) {
+    return (decimal * Decimal.fromBigInt(scaleFactor)).toBigInt();
+  }
+
   static BigInt decimalToBigInt(Decimal decimal) {
     return (decimal * Decimal.fromBigInt(tdpScaleFactor)).toBigInt();
   }

@@ -1,76 +1,88 @@
 import 'dart:async';
 
 import 'package:dapp/custom_exception/custom_exception.dart';
+import 'package:dapp/enum/erc20_usdc_functions.dart';
 import 'package:dapp/enum/escrow_events.dart';
-import 'package:dapp/utils/contact_utils.dart';
+import 'package:dapp/services/wallet_connection_service.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 import 'package:web3dart/crypto.dart';
-import 'package:web3dart/json_rpc.dart';
-import 'package:web3dart/web3dart.dart';
 import 'package:dapp/services/ethereum_abi_loader.dart';
 import 'package:dapp/enum/escrow_factory_functions.dart';
 
 class EthereumService {
   static final EthereumService _instance = EthereumService._internal();
-  static const int _chainID = 1337;
+  late WalletConnectionService _walletConnectionService;
+  //static const int _chainID = 1337;
   late String _rpcUrl;
-  late String _privateKey;
   late String factoryContractAddress;
+  late String usdcContractAddress;
   late DeployedContract escrowContract;
   late DeployedContract escrowFactoryContract;
+  late DeployedContract usdcContract;
   late Web3Client _client;
-  late EthPrivateKey _credentials;
+  late String _userConnectedAddress;
 
   EthereumService._internal();
 
   factory EthereumService(
-      {required String rpcUrl,
-      required String privateKey,
-      required String factoryContractAddress}) {
-    _instance._rpcUrl = rpcUrl;
-    _instance._privateKey = privateKey;
+      {required WalletConnectionService walletConnectionService,
+      required String factoryContractAddress,
+      required String usdcContractAddress}) {
     _instance.factoryContractAddress = factoryContractAddress;
-    _instance._initialize();
+    _instance.usdcContractAddress = usdcContractAddress;
+    _instance._walletConnectionService = walletConnectionService;
+    //_instance._initialize();
     return _instance;
   }
 
-  void _initialize() async {
+  Future<void> initialize() async {
     try {
+      if (!_walletConnectionService.isConnected) {
+        throw GeneralException('Wallet is not connected');
+      }
+      // debugPrint(
+      //     '[Splidapp.ethereum_service] Rpc URL: ${_walletConnectionService.appKitModal.selectedChain?.rpcUrl}');
+      _rpcUrl = 'http://10.0.2.2:8545';
       _client = Web3Client(_rpcUrl, Client());
-      _credentials = EthPrivateKey.fromHex(_privateKey);
+      _userConnectedAddress = _walletConnectionService.connectedAddress!;
 
+      usdcContract = await _instance.loadUSDCContract();
       escrowFactoryContract = await _instance.loadFactoryContract();
       final response = await _instance.query(escrowFactoryContract,
           EscrowFactoryFunctions.getEscrow.functionName, [], true);
       String address = response[0].toString();
 
-      _initializeContacts(_credentials.address.toString());
-
       if (address != '0x0000000000000000000000000000000000000000') {
         escrowContract = await _instance.loadEscrowContract(address);
-        print('Escrow Contract is already deployed at: $address');
+        debugPrint(
+            '[Splidapp.ethereum_service] Escrow Contract is already deployed at: $address');
       } else {
         await deployEscrowContract(escrowFactoryContract);
         final address = await query(escrowFactoryContract,
             EscrowFactoryFunctions.getEscrow.functionName, [], true);
         escrowContract =
             await _instance.loadEscrowContract(address[0].toString());
-        print('Newly deployed escrow at: $address');
+        debugPrint(
+            '[Splidapp.ethereum_service] Newly deployed escrow at: $address');
       }
+      debugPrint('[Splidapp.ethereum_service] EthereumService Initialized');
+      return;
     } catch (e) {
-      print('Error: $e');
+      if (e is RPCError) {
+        String errorMessage = _parseRPCErrorMessage(e.message);
+        throw RpcException(errorMessage);
+      }
+      throw GeneralException('Unexpected error: $e');
     }
   }
 
-  void _initializeContacts(String userAddress) async {
-    //TODO:Temporary placed here, need to move else where more appropriate
-    await ContactUtils.initializeContact(userAddress);
-  }
-
-  EthereumAddress get userAddress => _credentials.address;
+  EthereumAddress get userAddress =>
+      EthereumAddress.fromHex(_userConnectedAddress);
   EthereumAddress get escrowAddress => escrowContract.address;
 
-  deployEscrowContract(DeployedContract factoryContract) async {
+  Future<dynamic> deployEscrowContract(DeployedContract factoryContract) async {
     return await callFunction(factoryContractAddress,
         EscrowFactoryFunctions.deployEscrow.functionName, []);
   }
@@ -105,20 +117,46 @@ class EthereumService {
     return contract;
   }
 
+  Future<DeployedContract> loadUSDCContract() async {
+    final abiString =
+        await loadAbi('lib/services/ethereum_contract_json/usdc_abi.json');
+    final contract = DeployedContract(
+      ContractAbi.fromJson(abiString, 'UsdcContract'),
+      EthereumAddress.fromHex(usdcContractAddress),
+    );
+    return contract;
+  }
+
   callFunction(
       String contractAddress, String functionName, List<dynamic> args) async {
     DeployedContract deployedContract;
 
     if (functionName == EscrowFactoryFunctions.deployEscrow.functionName) {
       deployedContract = await loadFactoryContract();
+    } else if (functionName == Erc20UsdcFunctions.approve.functionName) {
+      deployedContract = await loadUSDCContract();
     } else {
       deployedContract = await loadEscrowContract(contractAddress);
     }
 
-    final function = deployedContract.function(functionName);
+    //final function = deployedContract.function(functionName);
 
     try {
-      final result = await _client.sendTransaction(
+      _walletConnectionService.appKitModal.launchConnectedWallet();
+
+      final result =
+          await _walletConnectionService.appKitModal.requestWriteContract(
+        topic: _walletConnectionService.appKitModal.session!.topic,
+        chainId: _walletConnectionService.appKitModal.selectedChain!.chainId,
+        deployedContract: deployedContract,
+        functionName: functionName,
+        transaction: Transaction(
+          from: EthereumAddress.fromHex(
+              _walletConnectionService.appKitModal.session!.address!),
+        ),
+        parameters: args,
+      );
+      /* final result = await _client.sendTransaction(
         _credentials,
         Transaction.callContract(
           contract: deployedContract,
@@ -127,15 +165,7 @@ class EthereumService {
           maxGas: 6721975,
         ),
         chainId: _chainID,
-      );
-
-      TransactionReceipt? receipt;
-      while (receipt == null) {
-        receipt = await _client.getTransactionReceipt(result);
-        if (receipt == null) {
-          await Future.delayed(const Duration(seconds: 1));
-        }
-      }
+      ); */
 
       return result;
     } catch (e) {
@@ -150,15 +180,15 @@ class EthereumService {
   Future<List<dynamic>> query(DeployedContract contract, String functionName,
       List<dynamic> args, bool sendUserAddress) async {
     if (sendUserAddress) {
-      args.add(_credentials.address);
+      args.add(EthereumAddress.fromHex(_userConnectedAddress));
     }
     try {
       final ethFunction = contract.function(functionName);
       final result = await _client.call(
-        contract: contract,
-        function: ethFunction,
-        params: args,
-      );
+          contract: contract,
+          function: ethFunction,
+          params: args,
+          sender: EthereumAddress.fromHex(_userConnectedAddress));
       return result;
     } catch (e) {
       if (e is RPCError) {

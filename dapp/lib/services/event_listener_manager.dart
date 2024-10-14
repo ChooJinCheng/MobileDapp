@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dapp/services/ethereum_service.dart';
+import 'package:flutter/material.dart';
 import 'package:web3dart/web3dart.dart';
 
 class EventListenerManager {
@@ -13,7 +14,8 @@ class EventListenerManager {
     StreamSubscription<FilterEvent> subscription = await _ethereumService
         .listenToGroupCreatedEvents(contractAddress, handler);
     _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
-    print('listenToGroupCreatedEvents listener activated');
+    debugPrint(
+        '[Splidapp.event_listener_manager] listenToGroupCreatedEvents listener activated');
   }
 
   void listenToGroupDisbandedEvents(String contractAddress,
@@ -21,7 +23,8 @@ class EventListenerManager {
     StreamSubscription<FilterEvent> subscription = await _ethereumService
         .listenToGroupDisbandedEvents(contractAddress, handler);
     _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
-    print('listenToGroupDisbandedEvents listener activated');
+    debugPrint(
+        '[Splidapp.event_listener_manager] listenToGroupDisbandedEvents listener activated');
   }
 
   void listenToInitiateTransactionEvents(
@@ -29,7 +32,8 @@ class EventListenerManager {
     StreamSubscription<FilterEvent> subscription = await _ethereumService
         .listenToInitiateTransactionEvents(contractAddress, handler);
     _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
-    print('listenToInitiateTransactionEvents listener activated');
+    debugPrint(
+        '[Splidapp.event_listener_manager] listenToInitiateTransactionEvents listener activated');
   }
 
   void listenToApprovedTransactionEvents(
@@ -37,7 +41,8 @@ class EventListenerManager {
     StreamSubscription<FilterEvent> subscription = await _ethereumService
         .listenToApprovedTransactionEvents(contractAddress, handler);
     _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
-    print('listenToApprovedTransactionEvents listener activated');
+    debugPrint(
+        '[Splidapp.event_listener_manager] listenToApprovedTransactionEvents listener activated');
   }
 
   void listenToDeclinedTransactionEvents(
@@ -45,7 +50,8 @@ class EventListenerManager {
     StreamSubscription<FilterEvent> subscription = await _ethereumService
         .listenToDeclinedTransactionEvents(contractAddress, handler);
     _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
-    print('listenToDeclinedTransactionEvents listener activated');
+    debugPrint(
+        '[Splidapp.event_listener_manager] listenToDeclinedTransactionEvents listener activated');
   }
 
   void listenToExecutedTransactionEvents(
@@ -53,7 +59,8 @@ class EventListenerManager {
     StreamSubscription<FilterEvent> subscription = await _ethereumService
         .listenToExecutedTransactionEvents(contractAddress, handler);
     _listeners.putIfAbsent(contractAddress, () => []).add(subscription);
-    print('listenToExecutedTransactionEvents listener activated');
+    debugPrint(
+        '[Splidapp.event_listener_manager] listenToExecutedTransactionEvents listener activated');
   }
 
   void listenToEscrowRegisteredEvents(
@@ -62,7 +69,8 @@ class EventListenerManager {
     StreamSubscription<FilterEvent> subscription =
         _ethereumService.listenToEscrowRegisteredEvents(handler);
     _listeners.putIfAbsent(escrowFactoryAddress, () => []).add(subscription);
-    print('listenToEscrowRegisteredEvents listener activated');
+    debugPrint(
+        '[Splidapp.event_listener_manager] listenToEscrowRegisteredEvents listener activated');
   }
 
   void listenToEscrowDeregisteredEvents(
@@ -71,7 +79,8 @@ class EventListenerManager {
     StreamSubscription<FilterEvent> subscription =
         _ethereumService.listenToEscrowDeregisteredEvents(handler);
     _listeners.putIfAbsent(escrowFactoryAddress, () => []).add(subscription);
-    print('listenToEscrowDeregisteredEvents listener activated');
+    debugPrint(
+        '[Splidapp.event_listener_manager] listenToEscrowDeregisteredEvents listener activated');
   }
 
   void stopListeningForContract(String contractAddress) async {
@@ -84,11 +93,13 @@ class EventListenerManager {
           await Future.delayed(const Duration(milliseconds: 100));
           await subscription.cancel();
         } catch (e) {
-          print('Error cancelling listener for $contractAddress: $e');
+          debugPrint(
+              '[Splidapp.event_listener_manager] Error cancelling listener for $contractAddress: $e');
         }
       }
       _listeners.remove(contractAddress);
-      print('$contractAddress listener deactivated');
+      debugPrint(
+          '[Splidapp.event_listener_manager] $contractAddress listener deactivated');
     }
   }
 }

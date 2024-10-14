@@ -3,6 +3,8 @@ const { ethers } = require("hardhat");
 async function main() {
     console.log("Starting deployment...");
 
+    // await network.provider.send("evm_setAutomine", [false]);
+    // await network.provider.send("evm_setIntervalMining", [5000]);
     // Deploy EscrowFactory
     const EscrowFactory = await ethers.getContractFactory("EscrowFactory");
     const escrowFactory = await EscrowFactory.deploy();
@@ -17,7 +19,9 @@ async function main() {
 
     // Setup: Store MockUSDC address in EscrowFactory
     console.log("Setting up the contracts...");
-    await escrowFactory.storeMockStablecoinAddress(await mockUSDC.getAddress());
+    const mockUSDAddr = await mockUSDC.getAddress();
+    const storeTx = await escrowFactory.storeMockStablecoinAddress(mockUSDAddr);
+    await storeTx.wait();
     console.log("Mock USDC address stored in EscrowFactory");
 
     // Verify setup

@@ -1,4 +1,5 @@
 import 'package:dapp/model/group_profile_model.dart';
+import 'package:dapp/screens/connect_wallet_view.dart';
 import 'package:dapp/screens/contacts/add_contact_view.dart';
 import 'package:dapp/screens/contacts/my_contact_view.dart';
 import 'package:dapp/screens/groups/deposit_group_view.dart';
@@ -12,6 +13,7 @@ import 'package:dapp/screens/groups/group_profile_view.dart';
 import 'package:dapp/screens/groups/member_profile_view.dart';
 import 'package:dapp/screens/groups/withdraw_group_view.dart';
 import 'package:dapp/screens/home_view.dart';
+import 'package:dapp/screens/loading_view.dart';
 import 'package:dapp/screens/manage_transaction_view.dart';
 import 'package:dapp/screens/groups/my_group_view.dart';
 import 'package:dapp/screens/my_portfolio_view.dart';
@@ -23,7 +25,7 @@ class AppNavigation {
   //Declare named constructor
   AppNavigation._();
 
-  static String initRoute = '/home';
+  static String initRoute = '/connectwallet';
 
   //Private navigators key
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -41,6 +43,16 @@ class AppNavigation {
     initialLocation: initRoute,
     navigatorKey: _rootNavigatorKey,
     routes: <RouteBase>[
+      GoRoute(
+        path: '/connectwallet',
+        name: 'Connectwallet',
+        builder: (context, state) => const MetaMaskConnectScreen(),
+      ),
+      GoRoute(
+        path: '/loading',
+        name: 'Loading',
+        builder: (context, state) => const LoadingView(),
+      ),
       StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return MainWrapper(
@@ -241,12 +253,6 @@ class AppNavigation {
                     ),
                   ),
                 ], 
-
-                //On other pages
-                onPressed: (){
-                  context.goNamed('subHome')
-                }
-                
                 */
               )
             ]),
@@ -269,7 +275,7 @@ class AppNavigation {
                   return const MyPortfolioView();
                 },
               )
-            ])
+            ]),
           ])
     ],
   );
