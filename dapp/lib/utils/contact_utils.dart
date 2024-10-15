@@ -4,8 +4,9 @@ class ContactUtils {
   static Future<void> initializeContact(String userAddress) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if (!prefs.containsKey(userAddress)) {
-      await prefs.clear();
+    if (!prefs.containsKey(userAddress) ||
+        prefs.getString(userAddress) != 'You') {
+      await clearEthereumAddressKeys();
       await prefs.setString(userAddress, 'You');
     }
   }
@@ -69,6 +70,17 @@ class ContactUtils {
     }
 
     return contacts;
+  }
+
+  static Future<void> clearEthereumAddressKeys() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final keysToRemove = prefs.getKeys().where((key) {
+      return _isValidEthereumAddress(key);
+    }).toList();
+
+    for (final key in keysToRemove) {
+      await prefs.remove(key);
+    }
   }
 
   static bool _isValidEthereumAddress(String address) {

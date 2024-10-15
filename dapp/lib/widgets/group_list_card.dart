@@ -62,8 +62,7 @@ class GroupListCard extends ConsumerWidget {
                   _disbandGroup(value, groupService, context);
                 },
                 itemBuilder: (BuildContext context) {
-                  return {'Deposit', 'Withdraw', 'Disband'}
-                      .map((String choice) {
+                  return {'Disband'}.map((String choice) {
                     return PopupMenuItem<String>(
                       value: choice,
                       child: Center(child: Text(choice)),

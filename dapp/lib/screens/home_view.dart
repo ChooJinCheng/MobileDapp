@@ -2,8 +2,8 @@ import 'package:dapp/global_state/providers/wallet_connection_service_provider.d
 import 'package:dapp/services/wallet_connection_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+import 'dart:io';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -116,7 +116,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
     debugPrint(
         '[Splidapp.connect_wallet_view] _onModalDisconnect ${event?.toString()}');
     setState(() {});
-    context.goNamed('Connectwallet');
+    restartApp(context);
+    // context.goNamed('Connectwallet');
   }
 
   void _onModalError(ModalError? event) {
@@ -129,5 +130,16 @@ class _HomeViewState extends ConsumerState<HomeView> {
       _walletConnectionService.appKitModal.disconnect();
     }
     setState(() {});
+  }
+
+  void restartApp(BuildContext context) {
+    final WidgetsBinding binding = WidgetsBinding.instance;
+    binding.addPostFrameCallback((_) {
+      // This rebuilds the widget tree
+      binding.reassembleApplication();
+
+      // This forces the app to restart
+      exit(0);
+    });
   }
 }
