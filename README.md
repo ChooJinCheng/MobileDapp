@@ -1,4 +1,4 @@
-# MobileDapp
+# SpliDapp
 FYP Project — Completed
 
 ## Project Abstraction
